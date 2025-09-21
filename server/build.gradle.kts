@@ -1,8 +1,9 @@
 plugins {
+    id("dev.nx.gradle.project-graph") version("0.1.7")
 	java
 	id("org.springframework.boot") version "3.5.5"
-	id("io.spring.dependency-management") version "1.1.7",
-	id("jacoco)
+	id("io.spring.dependency-management") version "1.1.7"
+	id("jacoco")
 }
 
 group = "br.com.fastgondolas.fastos"
@@ -44,29 +45,44 @@ dependencies {
 
 tasks.withType<Test> {
 	useJUnitPlatform()
-	finalizedBy(tasks.jacocoTestReport)
+}
+
+val classesToAnalyze = sourceSets.main.get().output.classesDirs.asFileTree.matching {
+    exclude("**/ServerApplication.class")
 }
 
 tasks.jacocoTestReport {
 	dependsOn(tasks.test)
 	reports {
-		xml.required.set(true),
-		html.required.set(true),
+		xml.required.set(true)
+		html.required.set(true)
 	}
+	classDirectories.setFrom(files(classesToAnalyze))
+	sourceDirectories.setFrom(files(sourceSets.main.get().java.srcDirs))
 }
 
 tasks.jacocoTestCoverageVerification {
+	dependsOn(tasks.jacocoTestReport)
 	violationRules {
 		rule {
+			element = "BUNDLE"
 			limit {
 				counter = "LINE"
 				value = "COVEREDRATIO"
-				minimum = 0.75.toBigDecimal()
+				minimum = "0.75".toBigDecimal()
 			}
 		}
 	}
+	classDirectories.setFrom(files(classesToAnalyze))
+	sourceDirectories.setFrom(files(sourceSets.main.get().java.srcDirs))
 }
 
 tasks.check {
 	dependsOn(tasks.jacocoTestCoverageVerification)
+}
+
+allprojects {
+    apply {
+        plugin("dev.nx.gradle.project-graph")
+    }
 }

@@ -10,7 +10,8 @@
       "!{projectRoot}/tsconfig.spec.json",
       "!{projectRoot}/jest.config.[jt]s",
       "!{projectRoot}/src/test-setup.[jt]s",
-      "!{projectRoot}/test-setup.[jt]s"
+      "!{projectRoot}/test-setup.[jt]s",
+      "!{projectRoot}/src/test/**/*"
     ],
     "sharedGlobals": ["{workspaceRoot}/.github/workflows/ci.yml"]
   },
@@ -57,13 +58,29 @@
       "options": {
         "targetName": "test"
       }
+    },
+    {
+      "plugin": "@nx/gradle",
+      "options": {
+        "testTargetName": "test",
+        "buildTargetName": "build",
+        "serveTargetName": "serve"
+      }
     }
   ],
   "targetDefaults": {
     "test": {
-      "dependsOn": ["^build"],
-      "options": {
-        "passWithNoTests": true
+      "dependsOn": ["^build"]
+    }
+  },
+  "projects": {
+    "mobile": {
+      "targets": {
+        "test": {
+          "options": {
+            "passWithNoTests": true
+          }
+        }
       }
     }
   }

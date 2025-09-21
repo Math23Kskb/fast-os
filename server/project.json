@@ -1,0 +1,26 @@
+{
+  "name": "server",
+  "$schema": "../node_modules/nx/schemas/project-schema.json",
+  "projectType": "application",
+  "sourceRoot": "server/src",
+  "targets": {
+    "build": {
+      "executor": "@nx/gradle:gradle",
+      "options": {
+        "taskName": "build"
+      }
+    },
+    "serve": {
+      "executor": "@nx/gradle:gradle",
+      "options": {
+        "taskName": "bootRun"
+      }
+    },
+    "test": {
+      "executor": "@nx/gradle:gradle",
+      "options": {
+        "taskName": "check"
+      }
+    }
+  }
+}
