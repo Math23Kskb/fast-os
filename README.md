@@ -1,6 +1,6 @@
 # Fast OS Monorepo
 
-[![Status da Build](https://github.com/<seu-usuario>/<seu-repositorio>/actions/workflows/ci.yml/badge.svg)](https://github.com/<seu-usuario>/<seu-repositorio>/actions/workflows/ci.yml)
+[![Status da Build](https://github.com/Math23Kskb/fast-os/actions/workflows/ci.yml/badge.svg)](https://github.com/Math23Kskb/fast-os/actions/workflows/ci.yml)
 
 Este repositório contém o código-fonte para o aplicativo móvel Fast OS e seu servidor backend, gerenciados em um monorepo Nx. A estrutura de monorepo permite o desenvolvimento centralizado, o compartilhamento eficiente de código e a padronização de ferramentas entre os projetos.
 
@@ -39,7 +39,8 @@ A estrutura do monorepo é organizada para separar claramente as aplicações, p
 ├── tools/            # Scripts e ferramentas de automação do workspace
 ├── .gitignore        # Arquivos e pastas a serem ignorados pelo Git
 ├── nx.json           # Configuração principal do workspace Nx
-└── package.json      # Dependências e scripts do Node.js para o monorepo```
+└── package.json      # Dependências e scripts do Node.js para o monorepo
+```
 
 ## Pré-requisitos
 
@@ -50,7 +51,7 @@ A estrutura do monorepo é organizada para separar claramente as aplicações, p
 
 1.  **Clone o repositório:**
     ```bash
-    git clone <url-do-seu-repositorio>
+    git clone https://github.com/Math23Kskb/fast-os.git
     cd fast-os
     ```
 
@@ -162,7 +163,6 @@ Isso nos ajuda a manter um histórico de commits legível e a automatizar a gera
 5.  **Solicite Revisão:** Peça a um ou mais membros da equipe para revisar seu código.
 6.  **Garanta que a CI passe:** Todos os checks automatizados devem estar verdes.
 7.  **Use "Squash and Merge":** Ao mesclar, use a opção "Squash and merge" para manter o histórico da `main` limpo e linear.
-```
 
 ### Pull Requests (PRs)
 
