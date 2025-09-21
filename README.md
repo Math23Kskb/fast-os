@@ -1,90 +1,175 @@
-# FastOs
+# Fast OS Monorepo
 
-<a alt="Nx logo" href="https://nx.dev" target="_blank" rel="noreferrer"><img src="https://raw.githubusercontent.com/nrwl/nx/master/images/nx-logo.png" width="45"></a>
+[![Status da Build](https://github.com/<seu-usuario>/<seu-repositorio>/actions/workflows/ci.yml/badge.svg)](https://github.com/<seu-usuario>/<seu-repositorio>/actions/workflows/ci.yml)
 
-✨ Your new, shiny [Nx workspace](https://nx.dev) is almost ready ✨.
+Este repositório contém o código-fonte para o aplicativo móvel Fast OS e seu servidor backend, gerenciados em um monorepo Nx. A estrutura de monorepo permite o desenvolvimento centralizado, o compartilhamento eficiente de código e a padronização de ferramentas entre os projetos.
 
-[Learn more about this workspace setup and its capabilities](https://nx.dev/nx-api/js?utm_source=nx_project&amp;utm_medium=readme&amp;utm_campaign=nx_projects) or run `npx nx graph` to visually explore what was created. Now, let's get you up to speed!
+## Índice
 
-## Finish your CI setup
+- [Stack de Tecnologias](#stack-de-tecnologias)
+- [Estrutura de Diretórios](#estrutura-de-diretórios)
+- [Pré-requisitos](#pré-requisitos)
+- [Primeiros Passos](#primeiros-passos)
+- [Fluxo de Desenvolvimento](#fluxo-de-desenvolvimento)
+- [Qualidade e Testes](#qualidade-e-testes)
+- [Relatórios de Cobertura de Código](#relatórios-de-cobertura-de-código)
+- [Como Contribuir](#como-contribuir)
 
-[Click here to finish setting up your workspace!](https://cloud.nx.app/connect/ZkOl8pfTUl)
+## Stack de Tecnologias
 
+- **Monorepo:** [Nx](https://nx.dev/)
+- **Frontend (Mobile):** [React Native](https://reactnative.dev/) com [Expo](https://expo.dev/)
+- **Backend (Server):** [Spring Boot](https://spring.io/projects/spring-boot) com Java 21 e [Gradle](https://gradle.org/)
+- **Testes Frontend:** [Jest](https://jestjs.io/)
+- **Testes & Cobertura Backend:** [JUnit 5](https://junit.org/junit5/) & [Jacoco](https://www.eclemma.org/jacoco/)
+- **Qualidade de Código:** [ESLint](https://eslint.org/) & [Prettier](https://prettier.io/)
+- **Automação de Qualidade (Git Hooks):** [Husky](https://typicode.github.io/husky/) & [lint-staged](https://github.com/okonet/lint-staged)
 
-## Generate a library
+## Estrutura de Diretórios
 
-```sh
-npx nx g @nx/js:lib packages/pkg1 --publishable --importPath=@my-org/pkg1
-```
-
-## Run tasks
-
-To build the library use:
-
-```sh
-npx nx build pkg1
-```
-
-To run any task with Nx use:
-
-```sh
-npx nx <target> <project-name>
-```
-
-These targets are either [inferred automatically](https://nx.dev/concepts/inferred-tasks?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects) or defined in the `project.json` or `package.json` files.
-
-[More about running tasks in the docs &raquo;](https://nx.dev/features/run-tasks?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
-
-## Versioning and releasing
-
-To version and release the library use
+A estrutura do monorepo é organizada para separar claramente as aplicações, pacotes compartilhados e ferramentas.
 
 ```
-npx nx release
+.
+├── .github/          # Configurações de CI/CD (GitHub Actions)
+├── .husky/           # Scripts dos Git Hooks (pre-commit, pre-push)
+├── mobile/           # Código-fonte do aplicativo móvel (React Native/Expo)
+├── packages/         # Pacotes/bibliotecas compartilhadas (ex: libs de UI, lógica de negócios)
+├── server/           # Código-fonte do servidor backend (Spring Boot/Gradle)
+├── tools/            # Scripts e ferramentas de automação do workspace
+├── .gitignore        # Arquivos e pastas a serem ignorados pelo Git
+├── nx.json           # Configuração principal do workspace Nx
+└── package.json      # Dependências e scripts do Node.js para o monorepo```
+
+## Pré-requisitos
+
+- [Node.js](https://nodejs.org/) (ex: v22.x ou superior)
+- Java JDK (ex: v21 ou superior)
+
+## Primeiros Passos
+
+1.  **Clone o repositório:**
+    ```bash
+    git clone <url-do-seu-repositorio>
+    cd fast-os
+    ```
+
+2.  **Instale as dependências:**
+    ```bash
+    npm install
+    ```
+
+## Fluxo de Desenvolvimento
+
+Você pode executar as aplicações de frontend e backend simultaneamente, cada uma em seu próprio terminal.
+
+-   **Para executar o App Móvel (Expo):**
+    ```bash
+    npx nx serve mobile
+    ```
+
+-   **Para executar o Servidor Backend (Spring Boot):**
+    ```bash
+    npx nx serve server
+    ```
+
+## Qualidade e Testes
+
+O projeto possui "quality gates" (portões de qualidade) automatizados para garantir a consistência e a qualidade do código.
+
+### Executando Testes
+
+-   **Testes do Frontend:** Executa o Jest e gera um relatório de cobertura.
+    ```bash
+    npx nx test mobile
+    ```
+
+-   **Testes do Backend:** Executa a tarefa `check` do Gradle, que roda os testes unitários e valida a cobertura mínima de 75% com Jacoco.
+    ```bash
+    npx nx test server
+    ```
+
+### Testando Apenas o Código Afetado (Recomendado)
+
+Para otimizar o tempo, teste apenas os projetos afetados pelas suas mudanças. Este é o comando mais eficiente para validação local.
+```bash
+npx nx affected -t test
 ```
 
-Pass `--dry-run` to see what would happen without actually releasing the library.
+### Hooks Automatizados (Husky)
 
-[Learn more about Nx release &raquo;](https://nx.dev/features/manage-releases?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
+-   **Pre-commit (`git commit`):** O `lint-staged` formata o código com Prettier e verifica erros de lint com ESLint.
+-   **Pre-push (`git push`):** O comando `npx nx affected -t test` é executado, bloqueando o push se algum teste falhar.
 
-## Keep TypeScript project references up to date
+## Relatórios de Cobertura de Código
 
-Nx automatically updates TypeScript [project references](https://www.typescriptlang.org/docs/handbook/project-references.html) in `tsconfig.json` files to ensure they remain accurate based on your project dependencies (`import` or `require` statements). This sync is automatically done when running tasks such as `build` or `typecheck`, which require updated references to function correctly.
+Para uma análise detalhada da cobertura de testes, abra os seguintes relatórios no seu navegador:
 
-To manually trigger the process to sync the project graph dependencies information to the TypeScript project references, run the following command:
+-   **Relatório do Frontend:** `coverage/mobile/lcov-report/index.html`
+-   **Relatório do Backend:** `server/build/reports/jacoco/test/html/index.html`
 
-```sh
-npx nx sync
+## Como Contribuir
+
+Para manter o projeto organizado e de alta qualidade, por favor, siga estas diretrizes.
+
+### Estratégia de Branches
+
+-   A branch `main` é protegida. Todo o trabalho deve ser feito em branches separadas.
+-   Use prefixos para nomear suas branches:
+    -   `feat/`: Para novas funcionalidades (ex: `feat/login-screen`).
+    -   `fix/`: Para correções de bugs (ex: `fix/button-alignment`).
+    -   `chore/`: Para tarefas de manutenção do repositório (ex: `chore/update-dependencies`).
+    -   `docs/`: Para mudanças na documentação.
+
+### Mensagens de Commit
+
+**Utilizamos o padrão [Conventional Commits](https://www.conventionalcommits.org/pt-br/v1.0.0/).** Este padrão é obrigatório e validado automaticamente antes de cada commit.
+
+Isso nos ajuda a manter um histórico de commits legível e a automatizar a geração de changelogs e o controle de versão.
+
+**Formato:**
+```
+<tipo>(<escopo>): <assunto>
 ```
 
-You can enforce that the TypeScript project references are always in the correct state when running in CI by adding a step to your CI job configuration that runs the following command:
+-   **Tipo:** Descreve a natureza da mudança. Os mais comuns são:
+    -   `feat`: Uma nova funcionalidade.
+    -   `fix`: Uma correção de bug.
+    -   `chore`: Mudanças de build, configuração ou ferramentas que não afetam o código de produção.
+    -   `docs`: Mudanças na documentação.
+    -   `style`: Mudanças de formatação (Prettier, etc.).
+    -   `refactor`: Refatoração de código que não corrige um bug nem adiciona uma funcionalidade.
+    -   `test`: Adição ou correção de testes.
 
-```sh
-npx nx sync:check
+-   **Escopo (Opcional):** O nome do projeto ou da parte do código afetada (ex: `mobile`, `server`, `ci`, `auth`).
+
+-   **Assunto:** Uma descrição curta, no imperativo, começando com letra minúscula e sem ponto final.
+
+**Exemplos Válidos:**
+-   `feat(server): adiciona endpoint para criação de usuários`
+-   `fix(mobile): corrige alinhamento do botão de login`
+-   `docs: atualiza README com as regras de conventional commits`
+-   `chore: adiciona validação de mensagens de commit com commitlint`
+
+**IMPORTANTE:** Sua mensagem de commit será validada pelo `commitlint` usando o hook `commit-msg`. Se o formato não estiver correto, **o commit será bloqueado** até que a mensagem seja corrigida.
+
+### Pull Requests (PRs)
+
+1.  **Título Claro:** Use o padrão de Conventional Commits no título do seu PR.
+2.  **Descrição Detalhada:** Explique o *quê* e o *porquê* das suas mudanças.
+3.  **Assigne a si mesmo:** Marque-se como "Assignee".
+4.  **Adicione Labels:** Categorize seu PR (ex: `enhancement`, `bug`).
+5.  **Solicite Revisão:** Peça a um ou mais membros da equipe para revisar seu código.
+6.  **Garanta que a CI passe:** Todos os checks automatizados devem estar verdes.
+7.  **Use "Squash and Merge":** Ao mesclar, use a opção "Squash and merge" para manter o histórico da `main` limpo e linear.
 ```
 
-[Learn more about nx sync](https://nx.dev/reference/nx-commands#sync)
+### Pull Requests (PRs)
 
-
-[Learn more about Nx on CI](https://nx.dev/ci/intro/ci-with-nx#ready-get-started-with-your-provider?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
-
-## Install Nx Console
-
-Nx Console is an editor extension that enriches your developer experience. It lets you run tasks, generate code, and improves code autocompletion in your IDE. It is available for VSCode and IntelliJ.
-
-[Install Nx Console &raquo;](https://nx.dev/getting-started/editor-setup?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
-
-## Useful links
-
-Learn more:
-
-- [Learn more about this workspace setup](https://nx.dev/nx-api/js?utm_source=nx_project&amp;utm_medium=readme&amp;utm_campaign=nx_projects)
-- [Learn about Nx on CI](https://nx.dev/ci/intro/ci-with-nx?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
-- [Releasing Packages with Nx release](https://nx.dev/features/manage-releases?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
-- [What are Nx plugins?](https://nx.dev/concepts/nx-plugins?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
-
-And join the Nx community:
-- [Discord](https://go.nx.dev/community)
-- [Follow us on X](https://twitter.com/nxdevtools) or [LinkedIn](https://www.linkedin.com/company/nrwl)
-- [Our Youtube channel](https://www.youtube.com/@nxdevtools)
-- [Our blog](https://nx.dev/blog?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
+1.  **Título Claro:** Use o padrão de Conventional Commits no título do seu PR.
+2.  **Descrição Detalhada:** Explique o *quê* e o *porquê* das suas mudanças.
+3.  **Assigne a si mesmo:** Marque-se como "Assignee".
+4.  **Adicione Labels:** Categorize seu PR (ex: `enhancement`, `bug`).
+5.  **Solicite Revisão:** Peça a um ou mais membros da equipe para revisar seu código.
+6.  **Garanta que a CI passe:** Todos os checks automatizados devem estar verdes.
+7.  **Use "Squash and Merge":** Ao mesclar, use a opção "Squash and merge" para manter o histórico da `main` limpo e linear.
