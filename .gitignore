@@ -5,6 +5,9 @@ dist
 tmp
 out-tsc
 
+# Gradle build output
+build/
+
 # dependencies
 node_modules
 
@@ -60,3 +63,15 @@ cache/
 
 
 test-output
+
+# Log files
+*.log
+error.log
+
+# Environment variables
+.env
+.env.*
+!.env.example
+
+# Gradle user home
+.gradle
