@@ -16,6 +16,12 @@
         "taskName": "bootRun"
       }
     },
+    "clean": {
+      "executor": "@nx/gradle:gradle",
+      "options": {
+        "taskName": "clean"
+      }
+    },
     "test": {
       "executor": "@nx/gradle:gradle",
       "options": {

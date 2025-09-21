@@ -13,7 +13,11 @@
       "!{projectRoot}/test-setup.[jt]s",
       "!{projectRoot}/src/test/**/*"
     ],
-    "sharedGlobals": ["{workspaceRoot}/.github/workflows/ci.yml"]
+    "sharedGlobals": ["{workspaceRoot}/.github/workflows/ci.yml"],
+    "test": [
+    "{projectRoot}/src/main/**",
+    "{projectRoot}/src/test/**"
+    ]
   },
   "nxCloudId": "68cf25a990dcd01d25f1faf5",
   "plugins": [
@@ -70,7 +74,13 @@
   ],
   "targetDefaults": {
     "test": {
-      "dependsOn": ["^build"]
+      "dependsOn": ["^build"],
+      "inputs": [
+        "default",
+        "^default",
+        "{workspaceRoot}/jest.preset.js",
+        "test"
+      ]
     }
   },
   "projects": {

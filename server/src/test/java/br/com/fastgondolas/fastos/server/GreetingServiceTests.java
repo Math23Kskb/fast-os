@@ -18,4 +18,10 @@ public class GreetingServiceTests {
         String result = greetingService.getGreeting(null);
         assertEquals("Hello, World!", result);
     }
+
+    @Test
+    void testGetGreetingWithEmptyName() {
+        String result = greetingService.getGreeting("");
+        assertEquals("Hello, World!", result);
+    }
 }
