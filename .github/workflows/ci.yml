@@ -44,10 +44,13 @@ jobs:
       - name: Install Dependencies
         run: npm ci --legacy-peer-deps
 
+      - name: Derive SHAs for Nx Affected
+        uses: nrwl/nx/set/shas@v4
+
       # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
       # - run: npx nx-cloud record -- echo Hello World
-      - name: Run QUality Checks on Affected Projects
-        run: npx nx affected -t lint test typecheck
+      - name: Run Quality Checks on Affected Projects
+        run: npx nx affected -t lint test typecheck --coverage
       # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ci/features/self-healing-ci
       - run: npx nx fix-ci
         if: always()
