@@ -52,7 +52,7 @@ jobs:
       - name: Run Quality Checks on Affected Projects
         run: |
           npx nx affected -t lint typecheck
-          npx nx affected -t test --coverage
+          npx nx affected -t test
       # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ci/features/self-healing-ci
       - run: npx nx fix-ci
         if: always()
