@@ -10,7 +10,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class OrdemDeServicoController {
 
     @GetMapping("/{id}")
-    public String buscarPorID(@PathVariable String id) {
+    public String buscarPorID(@PathVariable Long id) {
         return "Esperando Ordem de Serviço com ID: " + id;
     }
 

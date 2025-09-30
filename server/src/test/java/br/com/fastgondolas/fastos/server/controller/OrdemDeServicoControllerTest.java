@@ -10,7 +10,7 @@ class OrdemDeServicoControllerTest {
     void buscarPorID() {
         OrdemDeServicoController controller = new OrdemDeServicoController();
 
-        String idDeTeste = "42";
+        Long idDeTeste = 42L;
 
         String resultado = controller.buscarPorID(idDeTeste);
 
