@@ -19,9 +19,9 @@ class SecurityConfigTest {
     private MockMvc mockMvc;
 
     @Test
-    void quandoAcessarApiEndpoint_devePermitirAcesso() throws Exception {
+    void quandoAcessarEndpointProtegidoSemAutenticacao_deveRetornarProibido() throws Exception {
         mockMvc.perform(get("/api/v1/ordens-de-servico/123"))
-                .andExpect(status().isOk());
+                .andExpect(status().isForbidden());
     }
 
     @Test
