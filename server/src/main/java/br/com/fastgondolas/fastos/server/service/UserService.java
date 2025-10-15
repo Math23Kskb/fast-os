@@ -1,6 +1,7 @@
 package br.com.fastgondolas.fastos.server.service;
 
 import br.com.fastgondolas.fastos.server.dto.LoginRequestDto;
+import br.com.fastgondolas.fastos.server.exception.UserAlreadyExistsException;
 import br.com.fastgondolas.fastos.server.model.User;
 import br.com.fastgondolas.fastos.server.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -17,12 +18,9 @@ public class UserService {
 
     public User registerUser(User user) {
 
-        if(userRepository.findByUsername(user.getUsername()).isPresent()) {
-            throw new RuntimeException("Erro: Usuário já está em uso!");
-        }
-
-        if(userRepository.findByEmail(user.getEmail()).isPresent()) {
-            throw new RuntimeException("Erro: Email já está em uso!");
+        if(userRepository.findByUsername(user.getUsername()).isPresent() ||
+                userRepository.findByEmail(user.getEmail()).isPresent()) {
+            throw new UserAlreadyExistsException("Um usuário com este nome de usuário ou email já existe.");
         }
 
         String hashedPassword = passwordEncoder.encode(user.getPassword());

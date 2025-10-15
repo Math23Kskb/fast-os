@@ -1,6 +1,7 @@
 package br.com.fastgondolas.fastos.server.service;
 
 import br.com.fastgondolas.fastos.server.dto.LoginRequestDto;
+import br.com.fastgondolas.fastos.server.exception.UserAlreadyExistsException;
 import br.com.fastgondolas.fastos.server.model.User;
 import br.com.fastgondolas.fastos.server.repository.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -60,15 +61,28 @@ class UserServiceTest {
     }
 
     @Test
-    void whenUsernameAlreadyExists_shouldThrowException() {
+    void whenUsernameAlreadyExists_shouldThrowUserAlreadyExistsException() {
         when(userRepository.findByUsername(user.getUsername())).thenReturn(Optional.of(user));
 
-        RuntimeException exception = assertThrows(RuntimeException.class, () -> {
+        RuntimeException exception = assertThrows(UserAlreadyExistsException.class, () -> {
             userService.registerUser(user);
         });
 
-        assertEquals("Erro: Usuário já está em uso!",  exception.getMessage());
+        assertEquals("Um usuário com este nome de usuário ou email já existe.",  exception.getMessage());
 
+        verify(userRepository, never()).save(any(User.class));
+    }
+
+    @Test
+    void whenEmailAlreadyExists_shouldThrowUserAlreadyExistsException() {
+        when(userRepository.findByUsername(user.getUsername())).thenReturn(Optional.empty());
+        when(userRepository.findByEmail(user.getEmail())).thenReturn(Optional.of(user));
+
+        UserAlreadyExistsException exception = assertThrows(UserAlreadyExistsException.class, () -> {
+            userService.registerUser(user);
+        });
+
+        assertEquals("Um usuário com este nome de usuário ou email já existe.", exception.getMessage());
         verify(userRepository, never()).save(any(User.class));
     }
 
