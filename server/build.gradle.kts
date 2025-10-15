@@ -45,12 +45,19 @@ dependencies {
 	testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 }
 
+tasks.withType<JavaCompile> {
+	options.compilerArgs.add("-parameters")
+}
+
 tasks.withType<Test> {
 	useJUnitPlatform()
 }
 
 val classesToAnalyze = sourceSets.main.get().output.classesDirs.asFileTree.matching {
-    exclude("**/ServerApplication.class")
+    exclude(
+		"**/dto/**",
+		"**/model/**",
+		"**/ServerApplication.class")
 }
 
 tasks.jacocoTestReport {

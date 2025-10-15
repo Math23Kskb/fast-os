@@ -1,0 +1,10 @@
+package br.com.fastgondolas.fastos.server.dto;
+
+import java.util.UUID;
+
+public record UserResponseDto(
+        UUID id,
+        String username,
+        String email
+) {
+}
