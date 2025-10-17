@@ -2,6 +2,7 @@
   "name": "@fast-os/mobile",
   "version": "0.0.1",
   "private": true,
+  "main": "index.js",
   "scripts": {
     "eas-build-post-install": "cd ../ && node tools/scripts/eas-build-post-install.mjs . mobile"
   },
