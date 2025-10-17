@@ -62,6 +62,7 @@
     "@expo/metro-config": "~0.20.14",
     "@expo/metro-runtime": "~5.0.4",
     "expo": "~53.0.10",
+    "expo-secure-store": "~14.2.4",
     "expo-splash-screen": "~0.30.9",
     "expo-status-bar": "~2.2.3",
     "expo-system-ui": "~5.0.8",
