@@ -10,9 +10,7 @@ Este repositório contém o código-fonte para o aplicativo móvel Fast OS e seu
 - [Estrutura de Diretórios](#estrutura-de-diretórios)
 - [Pré-requisitos](#pré-requisitos)
 - [Primeiros Passos](#primeiros-passos)
-- [Fluxo de Desenvolvimento](#fluxo-de-desenvolvimento)
-- [Qualidade e Testes](#qualidade-e-testes)
-- [Relatórios de Cobertura de Código](#relatórios-de-cobertura-de-código)
+- [Comandos Essenciais do Dia a Dia](#-comandos-essenciais-do-dia-a-dia)
 - [Como Contribuir](#como-contribuir)
 
 ## Stack de Tecnologias
@@ -44,7 +42,7 @@ A estrutura do monorepo é organizada para separar claramente as aplicações, p
 
 ## Pré-requisitos
 
-- [Node.js](https://nodejs.org/) (ex: v22.x ou superior)
+- [Node.js](https://nodejs.org/) (ex: v20.x ou superior)
 - Java JDK (ex: v21 ou superior)
 
 ## Primeiros Passos
@@ -60,116 +58,73 @@ A estrutura do monorepo é organizada para separar claramente as aplicações, p
     npm install
     ```
 
-## Fluxo de Desenvolvimento
+## 🚀 Comandos Essenciais do Dia a Dia
 
-Você pode executar as aplicações de frontend e backend simultaneamente, cada uma em seu próprio terminal.
+Para simplificar o fluxo de trabalho e garantir consistência, todos os comandos importantes foram padronizados como scripts no `package.json` raiz. Utilize sempre os comandos `npm run ...` listados abaixo, pois eles são atalhos otimizados para as operações mais comuns.
 
--   **Para executar o App Móvel (Expo):**
-    ```bash
-    npx nx serve mobile
-    ```
+### 🏁 Iniciando as Aplicações em Modo de Desenvolvimento
 
--   **Para executar o Servidor Backend (Spring Boot):**
-    ```bash
-    npx nx serve server
-    ```
+| Comando | Descrição |
+| :--- | :--- |
+| `npm run start:mobile` | Inicia o servidor de desenvolvimento do **app móvel** (Expo). |
+| `npm run start:server` | Inicia o servidor de desenvolvimento do **backend** (Spring Boot). |
 
-## Qualidade e Testes
+_Nota: Você precisará de dois terminais abertos para rodar ambos simultaneamente._
 
-O projeto possui "quality gates" (portões de qualidade) automatizados para garantir a consistência e a qualidade do código.
+### ✅ Validando seu Código com Testes
 
-### Executando Testes
+Nossa estratégia de testes é otimizada para velocidade. O comando `npm test` é o que você usará na maior parte do tempo.
 
--   **Testes do Frontend:** Executa o Jest e gera um relatório de cobertura.
-    ```bash
-    npx nx test mobile
-    ```
+| Comando | Descrição | Quando Usar |
+| :--- | :--- | :--- |
+| **`npm test`** | **(Comando Padrão)** Roda os testes **apenas nos projetos afetados** pelas suas mudanças. | **Use este 99% do tempo.** É o mais rápido e eficiente para validar seu trabalho antes de um `git push`. |
+| `npm run test:mobile` | Roda **todos** os testes do projeto `mobile`. | Quando você faz mudanças profundas no app móvel e quer garantir que nada quebrou. |
+| `npm run test:server` | Roda **todos** os testes do projeto `server`. | Quando você faz mudanças profundas no backend. |
+| `npm run test:all` | Roda **todos os testes de todos os projetos** no monorepo. | Raramente. Útil antes de um grande release ou para ter certeza absoluta de que tudo está funcionando. |
 
--   **Testes do Backend:** Executa a tarefa `check` do Gradle, que roda os testes unitários e valida a cobertura mínima de 75% com Jacoco.
-    ```bash
-    npx nx test server
-    ```
+### ✨ Mantendo a Qualidade e a Formatação
 
-### Testando Apenas o Código Afetado (Recomendado)
+Estes comandos ajudam a manter o código limpo e padronizado.
 
-Para otimizar o tempo, teste apenas os projetos afetados pelas suas mudanças. Este é o comando mais eficiente para validação local.
-```bash
-npx nx affected -t test
-```
+| Comando | Descrição |
+| :--- | :--- |
+| `npm run format` | **Formata automaticamente** todo o código do projeto usando Prettier. |
+| `npm run lint` | Roda o ESLint em **todos os projetos** para encontrar problemas de qualidade e possíveis bugs. |
 
-### Hooks Automatizados (Husky)
+> **Lembre-se: Tudo é Automatizado!**
+> Graças aos Git Hooks (Husky), a formatação (`format`), o lint (`lint`) e os testes afetados (`npm test`) já são executados automaticamente antes de cada `git commit` e `git push`. Estes comandos manuais são para sua conveniência durante o desenvolvimento.
 
--   **Pre-commit (`git commit`):** O `lint-staged` formata o código com Prettier e verifica erros de lint com ESLint.
--   **Pre-push (`git push`):** O comando `npx nx affected -t test` é executado, bloqueando o push se algum teste falhar.
+### 📊 Visualizando Relatórios de Cobertura de Código
 
-## Relatórios de Cobertura de Código
-
-Para uma análise detalhada da cobertura de testes, abra os seguintes relatórios no seu navegador:
+Após rodar os testes com `npm run test:mobile` ou `npm run test:server`, você pode abrir os relatórios detalhados de cobertura no seu navegador:
 
 -   **Relatório do Frontend:** `coverage/mobile/lcov-report/index.html`
 -   **Relatório do Backend:** `server/build/reports/jacoco/test/html/index.html`
 
 ## Como Contribuir
 
-Para manter o projeto organizado e de alta qualidade, por favor, siga estas diretrizes.
+Para manter o projeto organizado e de alta qualidade, por favor, siga estas diretrizes. Para um guia mais detalhado sobre o fluxo de trabalho diário, consulte o arquivo `CONTRIBUTING.md`.
 
 ### Estratégia de Branches
 
 -   A branch `main` é protegida. Todo o trabalho deve ser feito em branches separadas.
--   Use prefixos para nomear suas branches:
-    -   `feat/`: Para novas funcionalidades (ex: `feat/login-screen`).
-    -   `fix/`: Para correções de bugs (ex: `fix/button-alignment`).
-    -   `chore/`: Para tarefas de manutenção do repositório (ex: `chore/update-dependencies`).
-    -   `docs/`: Para mudanças na documentação.
+-   Use prefixos para nomear suas branches: `feat/`, `fix/`, `chore/`, `docs/`.
 
 ### Mensagens de Commit
 
-**Utilizamos o padrão [Conventional Commits](https://www.conventionalcommits.org/pt-br/v1.0.0/).** Este padrão é obrigatório e validado automaticamente antes de cada commit.
+**Utilizamos o padrão [Conventional Commits](https://www.conventionalcommits.org/pt-br/v1.0.0/).** Este padrão é **obrigatório** e validado automaticamente antes de cada commit pelo `commitlint`.
 
-Isso nos ajuda a manter um histórico de commits legível e a automatizar a geração de changelogs e o controle de versão.
-
-**Formato:**
-```
-<tipo>(<escopo>): <assunto>
-```
-
--   **Tipo:** Descreve a natureza da mudança. Os mais comuns são:
-    -   `feat`: Uma nova funcionalidade.
-    -   `fix`: Uma correção de bug.
-    -   `chore`: Mudanças de build, configuração ou ferramentas que não afetam o código de produção.
-    -   `docs`: Mudanças na documentação.
-    -   `style`: Mudanças de formatação (Prettier, etc.).
-    -   `refactor`: Refatoração de código que não corrige um bug nem adiciona uma funcionalidade.
-    -   `test`: Adição ou correção de testes.
-
--   **Escopo (Opcional):** O nome do projeto ou da parte do código afetada (ex: `mobile`, `server`, `ci`, `auth`).
-
--   **Assunto:** Uma descrição curta, no imperativo, começando com letra minúscula e sem ponto final.
+**Formato:** `<tipo>(<escopo>): <assunto>`
 
 **Exemplos Válidos:**
 -   `feat(server): adiciona endpoint para criação de usuários`
 -   `fix(mobile): corrige alinhamento do botão de login`
 -   `docs: atualiza README com as regras de conventional commits`
--   `chore: adiciona validação de mensagens de commit com commitlint`
-
-**IMPORTANTE:** Sua mensagem de commit será validada pelo `commitlint` usando o hook `commit-msg`. Se o formato não estiver correto, **o commit será bloqueado** até que a mensagem seja corrigida.
 
 ### Pull Requests (PRs)
 
 1.  **Título Claro:** Use o padrão de Conventional Commits no título do seu PR.
 2.  **Descrição Detalhada:** Explique o *quê* e o *porquê* das suas mudanças.
-3.  **Assigne a si mesmo:** Marque-se como "Assignee".
-4.  **Adicione Labels:** Categorize seu PR (ex: `enhancement`, `bug`).
-5.  **Solicite Revisão:** Peça a um ou mais membros da equipe para revisar seu código.
-6.  **Garanta que a CI passe:** Todos os checks automatizados devem estar verdes.
-7.  **Use "Squash and Merge":** Ao mesclar, use a opção "Squash and merge" para manter o histórico da `main` limpo e linear.
-
-### Pull Requests (PRs)
-
-1.  **Título Claro:** Use o padrão de Conventional Commits no título do seu PR.
-2.  **Descrição Detalhada:** Explique o *quê* e o *porquê* das suas mudanças.
-3.  **Assigne a si mesmo:** Marque-se como "Assignee".
-4.  **Adicione Labels:** Categorize seu PR (ex: `enhancement`, `bug`).
-5.  **Solicite Revisão:** Peça a um ou mais membros da equipe para revisar seu código.
-6.  **Garanta que a CI passe:** Todos os checks automatizados devem estar verdes.
-7.  **Use "Squash and Merge":** Ao mesclar, use a opção "Squash and merge" para manter o histórico da `main` limpo e linear.
+3.  **Solicite Revisão:** Peça a um ou mais membros da equipe para revisar seu código.
+4.  **Garanta que a CI passe:** Todos os checks automatizados devem estar verdes.
+5.  **Use "Squash and Merge":** Ao mesclar, use a opção "Squash and merge" para manter o histórico da `main` limpo e linear.
