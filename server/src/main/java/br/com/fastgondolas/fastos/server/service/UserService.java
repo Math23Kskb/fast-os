@@ -3,6 +3,7 @@ package br.com.fastgondolas.fastos.server.service;
 import br.com.fastgondolas.fastos.server.dto.LoginRequestDto;
 import br.com.fastgondolas.fastos.server.exception.UserAlreadyExistsException;
 import br.com.fastgondolas.fastos.server.model.User;
+import br.com.fastgondolas.fastos.server.model.UserRole;
 import br.com.fastgondolas.fastos.server.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -15,6 +16,7 @@ public class UserService {
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
+    private final JwtService jwtService;
 
     public User registerUser(User user) {
 
@@ -25,6 +27,7 @@ public class UserService {
 
         String hashedPassword = passwordEncoder.encode(user.getPassword());
         user.setPassword(hashedPassword);
+        user.setRole(UserRole.TECNICO);
 
         return userRepository.save(user);
     }
@@ -37,6 +40,6 @@ public class UserService {
             throw new  BadCredentialsException("Usuário ou senha inválida");
         }
 
-        return "jwt.placeholder.token.for." + user.getUsername();
+        return jwtService.generateToken(user);
     }
 }
