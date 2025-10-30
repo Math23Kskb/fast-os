@@ -10,11 +10,7 @@ import java.util.UUID;
 @Entity
 @Table(name = "anexos")
 @Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder
-public class Anexo {
-
-    @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
-    private UUID id;
+public class Anexo extends BaseEntity {
 
     private String urlArquivo;
 
@@ -22,9 +18,6 @@ public class Anexo {
     private AnexoTipo tipoArquivo;
 
     private String descricao;
-
-    @Builder.Default
-    private Instant criadoEm = Instant.now();
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "ordem_de_servico_id", nullable = false)

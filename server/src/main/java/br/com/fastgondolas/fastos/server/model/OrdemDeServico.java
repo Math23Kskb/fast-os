@@ -1,12 +1,14 @@
 package br.com.fastgondolas.fastos.server.model;
 
-import br.com.fastgondolas.fastos.server.dto.ProblemaDetalhadoDto;
+import br.com.fastgondolas.fastos.server.dto.CategoriaDto;
 import br.com.fastgondolas.fastos.server.dto.PecaPendenteDto;
 import br.com.fastgondolas.fastos.server.model.OsStatus;
 import io.hypersistence.utils.hibernate.type.json.JsonBinaryType;
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.annotations.Type;
+import org.hibernate.type.SqlTypes;
 
 import java.time.Instant;
 import java.time.LocalDate;
@@ -16,25 +18,23 @@ import java.util.UUID;
 @Entity
 @Table(name = "ordens_de_servico")
 @Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder
-public class OrdemDeServico {
-    @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
-    private UUID id;
+public class OrdemDeServico extends BaseEntity{
 
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "numero_os")
-    private Long numeroOs;
+    private String numeroOs;
 
     private String numeroSerieEquipamento;
 
-    @Type(JsonBinaryType.class)
-    @Column(columnDefinition = "jsonb")
-    private List<ProblemaDetalhadoDto> problemaDetalhado;
+    @JdbcTypeCode(SqlTypes.JSON)
+    @Column(name = "problema_detalhado", columnDefinition = "jsonb")
+    private List<CategoriaDto> problemaDetalhado;
 
     private String diagnosticoTecnico;
     private String solucaoAplicada;
 
     @Enumerated(EnumType.STRING)
+    @JdbcTypeCode(SqlTypes.NAMED_ENUM)
+    @Column(name = "status")
     private OsStatus status;
 
     private String motivoPausa;
@@ -63,4 +63,7 @@ public class OrdemDeServico {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "tecnico_responsavel_id")
     private User tecnicoResponsavel;
+
+    @OneToMany(mappedBy = "ordemDeServico", fetch = FetchType.LAZY)
+    private List<Anexo> anexos;
 }

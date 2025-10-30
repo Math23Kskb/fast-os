@@ -1,7 +1,7 @@
 package br.com.fastgondolas.fastos.server.model;
 
 public enum CategoriaEnum {
-    REFIGERACAO,
+    REFRIGERACAO,
     VAZAMENTO,
     ILUMINACAO,
     ESTRUTURA

@@ -9,11 +9,7 @@ import java.util.UUID;
 @Entity
 @Table(name = "enderecos")
 @Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder
-public class Endereco {
-
-    @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
-    private UUID id;
+public class Endereco extends BaseEntity {
 
     private String logradouro;
     private String numero;
@@ -23,11 +19,6 @@ public class Endereco {
     private String estado;
     private String cep;
     private String descricao;
-
-    @Builder.Default
-    private Instant criadoEm = Instant.now();
-    @Builder.Default
-    private Instant atualizadoEm = Instant.now();
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "cliente_id", nullable = false)

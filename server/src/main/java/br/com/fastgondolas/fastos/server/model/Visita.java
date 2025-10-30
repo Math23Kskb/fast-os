@@ -5,16 +5,11 @@ import lombok.*;
 
 import java.time.Instant;
 import java.util.List;
-import java.util.UUID;
 
 @Entity
 @Table(name = "visitas")
 @Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder
-public class Visita {
-
-    @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
-    private UUID id;
+public class Visita extends BaseEntity {
 
     private String status;
 
@@ -22,11 +17,6 @@ public class Visita {
     private Instant dataChegadaCliente;
     private Instant dataSaidaCliente;
     private Instant dataChegadaEmpresa;
-
-    @Builder.Default
-    private Instant criadoEm = Instant.now();
-    @Builder.Default
-    private Instant atualizadoEm = Instant.now();
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "tecnico_id", nullable = false)

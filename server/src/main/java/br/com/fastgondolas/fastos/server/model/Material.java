@@ -9,11 +9,7 @@ import java.util.UUID;
 @Entity
 @Table(name = "materiais")
 @Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder
-public class Material {
-
-    @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
-    private UUID id;
+public class Material extends BaseEntity {
 
     @Column(unique = true)
     private String nome;
