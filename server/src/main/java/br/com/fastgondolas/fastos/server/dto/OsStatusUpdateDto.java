@@ -2,9 +2,8 @@ package br.com.fastgondolas.fastos.server.dto;
 
 import java.util.UUID;
 
-public record ClienteDto(
+public record OsStatusUpdateDto(
         UUID id,
-        String nome,
-        String contato
+        String status
 ) {
 }
