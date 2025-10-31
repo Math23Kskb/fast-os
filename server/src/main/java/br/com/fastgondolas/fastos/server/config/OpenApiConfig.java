@@ -27,8 +27,6 @@ public class OpenApiConfig {
                                 .url("https://www.fastgondolas.com.br"))
                 )
 
-                .addSecurityItem(new SecurityRequirement().addList(securitySchemeName))
-
                 .components(new Components()
                         .addSecuritySchemes(securitySchemeName,
                                 new SecurityScheme()

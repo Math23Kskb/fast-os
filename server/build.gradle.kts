@@ -16,6 +16,11 @@ java {
 		languageVersion = JavaLanguageVersion.of(21)
 	}
 }
+extra["springdocVersion"] = "2.8.9"
+extra["jjwtVersion"] = "0.13.0"
+extra["mapstructVersion"] = "1.5.5.Final"
+extra["hypersistenceVersion"] = "3.11.0"
+extra["lombokMapstructBindingVersion"] = "0.2.0"
 
 configurations {
 	compileOnly {
@@ -28,20 +33,42 @@ repositories {
 }
 
 dependencies {
-	implementation("org.springframework.boot:spring-boot-starter-data-jpa")
-	implementation("org.springframework.boot:spring-boot-starter-security")
-	implementation("org.springframework.boot:spring-boot-starter-validation")
+	// --- Spring Boot Core ---
 	implementation("org.springframework.boot:spring-boot-starter-web")
+	implementation("org.springframework.boot:spring-boot-starter-validation")
+	developmentOnly("org.springframework.boot:spring-boot-devtools")
+
+	// --- Persistência e Banco de Dados ---
+	implementation("org.springframework.boot:spring-boot-starter-data-jpa")
 	implementation("org.flywaydb:flyway-core")
 	implementation("org.flywaydb:flyway-database-postgresql")
-	implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.9")
-	compileOnly("org.projectlombok:lombok")
-	developmentOnly("org.springframework.boot:spring-boot-devtools")
-	runtimeOnly("com.h2database:h2")
 	runtimeOnly("org.postgresql:postgresql")
+	implementation("io.hypersistence:hypersistence-utils-hibernate-63:${property("hypersistenceVersion")}")
+
+
+	// --- Segurança ---
+	implementation("org.springframework.boot:spring-boot-starter-security")
+	// JWT
+	implementation("io.jsonwebtoken:jjwt-api:${property("jjwtVersion")}")
+	runtimeOnly("io.jsonwebtoken:jjwt-impl:${property("jjwtVersion")}")
+	runtimeOnly("io.jsonwebtoken:jjwt-jackson:${property("jjwtVersion")}")
+
+	// --- Documentação da API ---
+	implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:${property("springdocVersion")}")
+
+	// --- Ferramentas de Código (Lombok, MapStruct) ---
+	compileOnly("org.projectlombok:lombok")
 	annotationProcessor("org.projectlombok:lombok")
+	implementation("org.mapstruct:mapstruct:${property("mapstructVersion")}")
+	annotationProcessor("org.mapstruct:mapstruct-processor:${property("mapstructVersion")}")
+	annotationProcessor("org.projectlombok:lombok-mapstruct-binding:${property("lombokMapstructBindingVersion")}")
+
+	// --- Testes ---
 	testImplementation("org.springframework.boot:spring-boot-starter-test")
 	testImplementation("org.springframework.security:spring-security-test")
+	testImplementation("org.springframework.boot:spring-boot-testcontainers")
+	testImplementation("org.testcontainers:junit-jupiter")
+	testImplementation("org.testcontainers:postgresql")
 	testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 }
 
@@ -57,6 +84,7 @@ val classesToAnalyze = sourceSets.main.get().output.classesDirs.asFileTree.match
     exclude(
 		"**/dto/**",
 		"**/model/**",
+		"**/mapper/**",
 		"**/ServerApplication.class")
 }
 
