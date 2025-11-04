@@ -75,3 +75,6 @@ error.log
 
 # Gradle user home
 .gradle
+
+# Arquivos gerados pelo mobile
+mobile/coverage/

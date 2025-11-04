@@ -20,6 +20,10 @@ jest.mock('../screens/auth/LoginScreen', () => ({
   LoginScreen: () => <MockedInitialScreen />,
 }));
 
+jest.mock('../screens/listos/ListOSScreen', () => ({
+  ListOSScreen: () => <MockedInitialScreen />,
+}));
+
 describe('<App />', () => {
   it('should render the initial application screen without crashing', () => {
     render(<App />);
