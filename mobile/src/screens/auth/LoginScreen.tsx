@@ -31,8 +31,12 @@ export const LoginScreen = () => {
 
       Alert.alert('Sucesso!', 'Login realizado.');
       // TODO: Implementar navegação para a tela principal (Home)
-    } catch (error: any) {
-      Alert.alert('Erro no Login', error.message);
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        Alert.alert('Erro no Login', error.message);
+      } else {
+        Alert.alert('Erro no Login', 'Ocorreu um erro desconhecido.');
+      }
     } finally {
       setIsLoading(false);
     }
