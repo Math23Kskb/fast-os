@@ -1,6 +1,9 @@
 import React from 'react';
 import { SafeAreaView, StyleSheet, StatusBar } from 'react-native';
 import { LoginScreen } from '../screens/auth/LoginScreen';
+import { ListOSScreen } from '../screens/listos/ListOSScreen';
+import { InfoOSScreen } from '../screens/info/InfoOSScreen';
+
 // Telas adicionais podem ser importadas aqui para facilitar a troca durante o desenvolvimento
 
 export const App = () => {
@@ -22,8 +25,7 @@ export const App = () => {
        *
        ************************************************************************/}
 
-      <LoginScreen />
-
+      <InfoOSScreen />
       {/* Exemplo de como um dev trabalharia na tela de lista de OS: */}
       {/* <ListServiceOrderScreen /> */}
     </SafeAreaView>
