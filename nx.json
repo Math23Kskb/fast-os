@@ -14,10 +14,7 @@
       "!{projectRoot}/src/test/**/*"
     ],
     "sharedGlobals": ["{workspaceRoot}/.github/workflows/ci.yml"],
-    "test": [
-    "{projectRoot}/src/main/**",
-    "{projectRoot}/src/test/**"
-    ]
+    "test": ["{projectRoot}/src/main/**", "{projectRoot}/src/test/**"]
   },
   "nxCloudId": "68cf25a990dcd01d25f1faf5",
   "plugins": [

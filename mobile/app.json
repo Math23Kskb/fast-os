@@ -1,18 +1,21 @@
 {
   "expo": {
     "name": "Mobile",
-    "slug": "@fast-os/mobile",
+    "slug": "fast-os-mobile",
     "version": "1.0.0",
     "entryPoint": "./index.js",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "@fast-os/mobile",
+    "scheme": "fast-os-mobile",
+    "jsEngine": "hermes",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.fastos.fastosmobile"
     },
     "android": {
+      "package": "com.fastos.fastosmobile",
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#ffffff"
@@ -32,7 +35,14 @@
           "resizeMode": "contain",
           "backgroundColor": "#ffffff"
         }
-      ]
-    ]
+      ],
+      "expo-secure-store",
+      "expo-sqlite"
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "45b63529-55f9-426e-90dc-1b43c7a0fced"
+      }
+    }
   }
 }

@@ -1,86 +1,76 @@
 import React from 'react';
-import {
-  render,
-  screen,
-  fireEvent,
-  waitFor,
-} from '@testing-library/react-native';
-import { ListOSScreen } from './ListOSScreen';
+import { fireEvent, render, screen } from '@testing-library/react-native';
+import { NavProps, RawListOSScreen } from './ListOSScreen';
+import OrdemDeServico from '../../db/models/OrdemDeServico';
 
-jest.spyOn(console, 'log').mockImplementation(jest.fn());
+const mockOrdens = [
+  { id: 'os1', numeroOs: '1001', status: 'AGENDADA' },
+  { id: 'os2', numeroOs: '1002', status: 'EM ANDAMENTO' },
+  { id: 'os3', numeroOs: '1003', status: 'CONCLUÍDA' },
+] as OrdemDeServico[];
+
+const mockNavigationProps: NavProps = {
+  navigation: {
+    navigate: jest.fn(),
+  } as any,
+  route: {
+    key: 'ListOS-key',
+    name: 'ListOS',
+  } as any,
+};
+
+// eslint-disable-next-line @typescript-eslint/no-empty-function
+const mockConsoleLog = jest.spyOn(console, 'log').mockImplementation(() => {});
 
 describe('<ListOSScreen />', () => {
   beforeEach(() => {
     jest.clearAllMocks();
   });
 
-  it('renderiza os elementos principais da tela', async () => {
-    render(<ListOSScreen />);
+  it('renderiza os itens da lista corretamente', async () => {
+    render(<RawListOSScreen ordens={mockOrdens} {...mockNavigationProps} />);
 
-    await screen.findByText('Cliente A');
-
-    expect(screen.getByText(/Ordens de Serviço/i)).toBeTruthy();
+    expect(screen.getByText('OS: 1001')).toBeTruthy();
+    expect(screen.getByText('OS: 1002')).toBeTruthy();
     expect(screen.getByText('Selecione uma OS')).toBeTruthy();
   });
 
-  it('seleciona uma OS com toque simples', async () => {
-    render(<ListOSScreen />);
+  it('seleciona e desseleciona com toque simples', async () => {
+    render(<RawListOSScreen ordens={mockOrdens} {...mockNavigationProps} />);
+    const item1 = screen.getByText('OS: 1001');
 
-    await screen.findByText('Cliente A');
+    fireEvent.press(item1);
 
-    const item = screen.getByText('Cliente A');
+    expect(screen.getByText('Visualizar (1)')).toBeTruthy();
 
-    fireEvent.press(item);
-
-    expect(screen.getByText('Visualizar')).toBeTruthy();
+    fireEvent.press(item1);
+    expect(screen.getByText('Selecione uma OS')).toBeTruthy();
   });
 
-  it('ativa o modo multiseleção com toque longo e seleciona vários itens', async () => {
-    render(<ListOSScreen />);
-
-    await screen.findByText('Cliente A');
-
-    const item1 = screen.getByText('Cliente A');
-    const item2 = screen.getByText('Cliente B');
+  it('ativa o modo multiseleção com toque longo', async () => {
+    render(<RawListOSScreen ordens={mockOrdens} {...mockNavigationProps} />);
+    const item1 = screen.getByText('OS: 1001');
+    const item2 = screen.getByText('OS: 1002');
 
     fireEvent(item1, 'longPress');
     expect(screen.getByText('1 selecionado(s)')).toBeTruthy();
 
     fireEvent.press(item2);
     expect(screen.getByText('2 selecionado(s)')).toBeTruthy();
-    expect(screen.getByText('Visualizar')).toBeTruthy();
-  });
-
-  it('remove item da seleção ao tocar novamente no modo simples', async () => {
-    render(<ListOSScreen />);
-
-    await screen.findByText('Cliente A');
-
-    const item1 = screen.getByText('Cliente A');
-
-    fireEvent.press(item1);
-    expect(screen.getByText('Visualizar')).toBeTruthy();
-
-    fireEvent.press(item1);
-    expect(screen.queryByText('Visualizar')).toBeNull();
-    expect(screen.getByText('Selecione uma OS')).toBeTruthy();
+    expect(screen.getByText('Visualizar (2)')).toBeTruthy();
   });
 
   it('executa handleButtonPress e loga as OSs selecionadas', async () => {
-    render(<ListOSScreen />);
+    render(<RawListOSScreen ordens={mockOrdens} {...mockNavigationProps} />);
 
-    await screen.findByText('Cliente A');
+    fireEvent.press(screen.getByText('OS: 1001'));
+    fireEvent.press(screen.getByText('Visualizar (1)'));
 
-    const itemA = screen.getByText('Cliente A');
+    expect(mockConsoleLog).toHaveBeenCalledWith(
+      'Navegaria para outra tela com os IDs:',
+      ['os1']
+    );
 
-    fireEvent.press(itemA);
-
-    const button = screen.getByText('Visualizar');
-
-    fireEvent.press(button);
-
-    await waitFor(() => {
-      expect(console.log).toHaveBeenCalledWith(JSON.stringify({ ids: ['1'] }));
-    });
+    expect(mockNavigationProps.navigation.navigate).not.toHaveBeenCalled();
   });
 });

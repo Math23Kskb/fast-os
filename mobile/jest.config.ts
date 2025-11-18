@@ -17,6 +17,14 @@ module.exports = {
     '^.+\\.(bmp|gif|jpg|jpeg|mp4|png|psd|svg|webp|ttf|otf|m4v|mov|mp4|mpeg|mpg|webm|aac|aiff|caf|m4a|mp3|wav|html|pdf|obj)$':
       require.resolve('jest-expo/src/preset/assetFileTransformer.js'),
   },
+
+  coveragePathIgnorePatterns: [
+    '/node_modules/',
+    '<rootDir>/src/db/models/',
+    '<rootDir>/src/db/schema.ts',
+    '<rootDir>/src/db/index.ts',
+    '<rootDir>/src/navigation/',
+  ],
   coverageDirectory: '../coverage/mobile',
 
   collectCoverage: true,

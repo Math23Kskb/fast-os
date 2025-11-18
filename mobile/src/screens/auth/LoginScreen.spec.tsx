@@ -1,19 +1,16 @@
-// mobile/src/screens/auth/LoginScreen.spec.tsx
-
 import React from 'react';
 import {
+  fireEvent,
   render,
   screen,
-  fireEvent,
   waitFor,
 } from '@testing-library/react-native';
 import { Alert } from 'react-native';
 import * as SecureStore from 'expo-secure-store';
-import { loginUser } from '../../services/authService';
+import { loginUser } from '../../api/services/authService';
 import { LoginScreen } from './LoginScreen';
-import { setItemAsync } from 'expo-secure-store';
 
-jest.mock('../../services/authService');
+jest.mock('../../api/services/authService');
 jest.mock('expo-secure-store');
 jest.spyOn(Alert, 'alert');
 
@@ -36,6 +33,9 @@ describe('<Login Screen />', () => {
   });
 
   it('handles a successful login flow', async () => {
+    const devSettingsSpy = jest
+      .spyOn(require('react-native'), 'DevSettings', 'get')
+      .mockReturnValue({ reload: jest.fn() });
     const fakeUserData = { token: 'fake-jwt-token' };
     mockedLoginUser.mockResolvedValue(fakeUserData);
 
@@ -49,9 +49,10 @@ describe('<Login Screen />', () => {
     const spinner = await screen.findByTestId('activity-indicator');
     expect(spinner).toBeTruthy();
 
-    await waitFor(() => {
-      expect(mockedAlert).toHaveBeenCalledWith('Sucesso!', 'Login realizado.');
-    });
+    expect(SecureStore.setItemAsync).toHaveBeenCalledWith(
+      'authToken',
+      'fake-jwt-token'
+    );
 
     expect(screen.queryByTestId('activity-indicator')).toBeNull();
 
@@ -66,6 +67,12 @@ describe('<Login Screen />', () => {
       'authToken',
       'fake-jwt-token'
     );
+
+    await waitFor(() => {
+      expect(devSettingsSpy().reload).toHaveBeenCalled();
+    });
+
+    devSettingsSpy.mockRestore();
   });
 
   it('handles a failed login flow', async () => {
