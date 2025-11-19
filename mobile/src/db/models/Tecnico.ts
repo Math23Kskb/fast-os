@@ -6,12 +6,12 @@ import {
   date,
   children,
 } from '@nozbe/watermelondb/decorators';
-import { Visita } from './Visita';
+import Visita from './Visita';
 
 export default class Tecnico extends Model {
   static override table = 'tecnicos';
 
-  static associations = {
+  static override associations = {
     visitas: { type: 'has_many', foreignKey: 'tecnico_id' },
   } as const;
 

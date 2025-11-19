@@ -18,13 +18,38 @@ const mockedLoginUser = loginUser as jest.Mock;
 const mockedSetItemAsync = SecureStore.setItemAsync as jest.Mock;
 const mockedAlert = Alert.alert as jest.Mock;
 
+const mockNavigation = {
+  navigate: jest.fn(),
+  goBack: jest.fn(),
+  dispatch: jest.fn(),
+  setParams: jest.fn(),
+  addListener: jest.fn(),
+  removeListener: jest.fn(),
+  canGoBack: jest.fn(),
+  isFocused: jest.fn(),
+  push: jest.fn(),
+  replace: jest.fn(),
+  pop: jest.fn(),
+  popToTop: jest.fn(),
+  setOptions: jest.fn(),
+  reset: jest.fn(),
+  getParent: jest.fn(),
+  getState: jest.fn(),
+  getId: jest.fn(),
+} as any;
+
+const mockRoute = {
+  key: 'Login',
+  name: 'Login' as const,
+} as any;
+
 describe('<Login Screen />', () => {
   beforeEach(() => {
     jest.clearAllMocks();
   });
 
   it('renders the initial form elements', () => {
-    render(<LoginScreen />);
+    render(<LoginScreen navigation={mockNavigation} route={mockRoute} />);
 
     expect(screen.getByPlaceholderText('Usuário')).toBeTruthy();
     expect(screen.getByPlaceholderText('Senha')).toBeTruthy();
@@ -33,13 +58,14 @@ describe('<Login Screen />', () => {
   });
 
   it('handles a successful login flow', async () => {
+    const mockReload = jest.fn();
     const devSettingsSpy = jest
       .spyOn(require('react-native'), 'DevSettings', 'get')
-      .mockReturnValue({ reload: jest.fn() });
+      .mockReturnValue({ reload: mockReload });
     const fakeUserData = { token: 'fake-jwt-token' };
     mockedLoginUser.mockResolvedValue(fakeUserData);
 
-    render(<LoginScreen />);
+    render(<LoginScreen navigation={mockNavigation} route={mockRoute} />);
 
     fireEvent.changeText(screen.getByPlaceholderText('Usuário'), 'testuser');
     fireEvent.changeText(screen.getByPlaceholderText('Senha'), 'password123');
@@ -69,7 +95,7 @@ describe('<Login Screen />', () => {
     );
 
     await waitFor(() => {
-      expect(devSettingsSpy().reload).toHaveBeenCalled();
+      expect(mockReload).toHaveBeenCalled();
     });
 
     devSettingsSpy.mockRestore();
@@ -79,7 +105,7 @@ describe('<Login Screen />', () => {
     const errorMessage = 'Usuário ou senha inválidos';
     mockedLoginUser.mockRejectedValue(new Error(errorMessage));
 
-    render(<LoginScreen />);
+    render(<LoginScreen navigation={mockNavigation} route={mockRoute} />);
 
     fireEvent.changeText(screen.getByPlaceholderText('Usuário'), 'wronguser');
     fireEvent.changeText(screen.getByPlaceholderText('Senha'), 'wrongpass');
@@ -97,7 +123,7 @@ describe('<Login Screen />', () => {
   });
 
   it('shows an alert if username or password are not provided', () => {
-    render(<LoginScreen />);
+    render(<LoginScreen navigation={mockNavigation} route={mockRoute} />);
 
     fireEvent.press(screen.getByRole('button', { name: /entrar/i }));
 

@@ -9,9 +9,9 @@ import {
 import OrdemDeServico from './OrdemDeServico';
 
 export default class Anexo extends Model {
-  static table = 'anexos';
+  static override table = 'anexos';
 
-  static associations = {
+  static override associations = {
     ordens_de_servico: { type: 'belongs_to', key: 'ordem_de_servico_id' },
   } as const;
 

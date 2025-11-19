@@ -6,13 +6,13 @@ import {
   readonly,
   date,
 } from '@nozbe/watermelondb/decorators';
-import { Endereco } from './Endereco';
-import { OrdemDeServico } from './OrdemDeServico';
+import Endereco from './Endereco';
+import OrdemDeServico from './OrdemDeServico';
 
 export default class Cliente extends Model {
   static override table = 'clientes';
 
-  static associations = {
+  static override associations = {
     enderecos: { type: 'has_many', foreignKey: 'cliente_id' },
     ordens_de_servico: { type: 'has_many', foreignKey: 'cliente_id' },
   } as const;

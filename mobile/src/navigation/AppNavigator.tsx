@@ -82,3 +82,4 @@ const AppNavigator = () => {
 };
 
 export default AppNavigator;
+export type { AppStackParamList };

@@ -5,22 +5,13 @@ import {
   readonly,
   date,
 } from '@nozbe/watermelondb/decorators';
-import { Tecnico } from './Tecnico';
-import { Endereco } from './Endereco';
-
-interface VisitaRaw {
-  id: RecordId;
-  status: string;
-  tecnico_id: string;
-  endereco_id: string;
-  created_at: number;
-  updated_at: number;
-}
+import Tecnico from './Tecnico';
+import Endereco from './Endereco';
 
 export default class Visita extends Model {
   static override table = 'visitas';
 
-  static associations = {
+  static override associations = {
     tecnicos: { type: 'belongs_to', key: 'tecnico_id' },
     enderecos: { type: 'belongs_to', key: 'endereco_id' },
   } as const;

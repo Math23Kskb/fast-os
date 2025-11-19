@@ -136,11 +136,7 @@ export const RawListOSScreen = ({ ordens, navigation }: Props) => {
   );
 };
 
-interface InjectedProps {
-  ordens: OrdemDeServico[];
-}
-
-const enhance = withObservables<Props, InjectedProps>([], () => ({
+const enhance = withObservables([], () => ({
   ordens: observeOrdensDeServico(),
 }));
 
@@ -217,5 +213,11 @@ const styles = StyleSheet.create({
   },
   textoBotaoDesabilitado: {
     color: '#666',
+  },
+  emptyText: {
+    textAlign: 'center',
+    marginTop: 20,
+    fontSize: 16,
+    color: '#999',
   },
 });

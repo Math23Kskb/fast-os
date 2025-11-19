@@ -19,7 +19,7 @@ describe('apiClient Interceptor', () => {
     const config = { headers: {} };
 
     const newConfig =
-      await apiClient.interceptors.request.handlers[0].fulfilled(config);
+      await (apiClient.interceptors.request as any).handlers[0].fulfilled(config);
 
     expect(newConfig.headers.Authorization).toBe(`Bearer ${fakeToken}`);
   });
@@ -30,7 +30,7 @@ describe('apiClient Interceptor', () => {
     const config = { headers: {} };
 
     const newConfig =
-      await apiClient.interceptors.request.handlers[0].fulfilled(config);
+      await (apiClient.interceptors.request as any).handlers[0].fulfilled(config);
 
     expect(newConfig.headers.Authorization).toBeUndefined();
   });

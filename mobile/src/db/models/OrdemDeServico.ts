@@ -7,16 +7,16 @@ import {
   relation,
   text,
 } from '@nozbe/watermelondb/decorators';
-import { Cliente } from './Cliente';
-import { Endereco } from './Endereco';
-import { Tecnico } from './Tecnico';
+import Cliente from './Cliente';
+import Endereco from './Endereco';
+import Tecnico from './Tecnico';
 
 const sanitizeJson = (rawJson: any) => rawJson;
 
 export default class OrdemDeServico extends Model {
   static override table = 'ordens_de_servico';
 
-  static associations = {
+  static override associations = {
     clientes: { type: 'belongs_to', key: 'cliente_id' },
     enderecos: { type: 'belongs_to', key: 'endereco_id' },
     tecnicos: { type: 'belongs_to', key: 'tecnico_responsavel_id' },
