@@ -4,13 +4,20 @@
   "private": true,
   "main": "index.js",
   "scripts": {
-    "eas-build-post-install": "cd ../ && node tools/scripts/eas-build-post-install.mjs . mobile"
+    "eas-build-post-install": "cd ../ && node tools/scripts/eas-build-post-install.mjs . mobile",
+    "android": "expo run:android",
+    "ios": "expo run:ios"
   },
   "dependencies": {
     "@expo/metro-config": "*",
+    "@nozbe/watermelondb": "^0.28.0",
+    "@react-navigation/native": "^7.1.19",
+    "@react-navigation/native-stack": "^7.6.2",
     "@testing-library/react-native": "*",
     "expo": "*",
+    "expo-secure-store": "~14.2.4",
     "expo-splash-screen": "*",
+    "expo-sqlite": "~15.2.14",
     "expo-status-bar": "*",
     "expo-system-ui": "*",
     "jest-expo": "*",
@@ -18,8 +25,14 @@
     "metro-resolver": "*",
     "react": "*",
     "react-native": "*",
+    "react-native-quick-sqlite": "^8.2.7",
+    "react-native-safe-area-context": "5.4.0",
+    "react-native-screens": "~4.11.1",
     "react-native-svg": "*",
     "react-native-svg-transformer": "*",
     "react-native-web": "*"
+  },
+  "devDependencies": {
+    "@babel/plugin-proposal-class-properties": "^7.18.6"
   }
 }

@@ -1,19 +1,16 @@
-// mobile/src/screens/auth/LoginScreen.spec.tsx
-
 import React from 'react';
 import {
+  fireEvent,
   render,
   screen,
-  fireEvent,
   waitFor,
 } from '@testing-library/react-native';
 import { Alert } from 'react-native';
 import * as SecureStore from 'expo-secure-store';
-import { loginUser } from '../../services/authService';
+import { loginUser } from '../../api/services/authService';
 import { LoginScreen } from './LoginScreen';
-import { setItemAsync } from 'expo-secure-store';
 
-jest.mock('../../services/authService');
+jest.mock('../../api/services/authService');
 jest.mock('expo-secure-store');
 jest.spyOn(Alert, 'alert');
 
@@ -21,13 +18,38 @@ const mockedLoginUser = loginUser as jest.Mock;
 const mockedSetItemAsync = SecureStore.setItemAsync as jest.Mock;
 const mockedAlert = Alert.alert as jest.Mock;
 
+const mockNavigation = {
+  navigate: jest.fn(),
+  goBack: jest.fn(),
+  dispatch: jest.fn(),
+  setParams: jest.fn(),
+  addListener: jest.fn(),
+  removeListener: jest.fn(),
+  canGoBack: jest.fn(),
+  isFocused: jest.fn(),
+  push: jest.fn(),
+  replace: jest.fn(),
+  pop: jest.fn(),
+  popToTop: jest.fn(),
+  setOptions: jest.fn(),
+  reset: jest.fn(),
+  getParent: jest.fn(),
+  getState: jest.fn(),
+  getId: jest.fn(),
+} as any;
+
+const mockRoute = {
+  key: 'Login',
+  name: 'Login' as const,
+} as any;
+
 describe('<Login Screen />', () => {
   beforeEach(() => {
     jest.clearAllMocks();
   });
 
   it('renders the initial form elements', () => {
-    render(<LoginScreen />);
+    render(<LoginScreen navigation={mockNavigation} route={mockRoute} />);
 
     expect(screen.getByPlaceholderText('Usuário')).toBeTruthy();
     expect(screen.getByPlaceholderText('Senha')).toBeTruthy();
@@ -36,10 +58,14 @@ describe('<Login Screen />', () => {
   });
 
   it('handles a successful login flow', async () => {
+    const mockReload = jest.fn();
+    const devSettingsSpy = jest
+      .spyOn(require('react-native'), 'DevSettings', 'get')
+      .mockReturnValue({ reload: mockReload });
     const fakeUserData = { token: 'fake-jwt-token' };
     mockedLoginUser.mockResolvedValue(fakeUserData);
 
-    render(<LoginScreen />);
+    render(<LoginScreen navigation={mockNavigation} route={mockRoute} />);
 
     fireEvent.changeText(screen.getByPlaceholderText('Usuário'), 'testuser');
     fireEvent.changeText(screen.getByPlaceholderText('Senha'), 'password123');
@@ -49,9 +75,10 @@ describe('<Login Screen />', () => {
     const spinner = await screen.findByTestId('activity-indicator');
     expect(spinner).toBeTruthy();
 
-    await waitFor(() => {
-      expect(mockedAlert).toHaveBeenCalledWith('Sucesso!', 'Login realizado.');
-    });
+    expect(SecureStore.setItemAsync).toHaveBeenCalledWith(
+      'authToken',
+      'fake-jwt-token'
+    );
 
     expect(screen.queryByTestId('activity-indicator')).toBeNull();
 
@@ -66,13 +93,19 @@ describe('<Login Screen />', () => {
       'authToken',
       'fake-jwt-token'
     );
+
+    await waitFor(() => {
+      expect(mockReload).toHaveBeenCalled();
+    });
+
+    devSettingsSpy.mockRestore();
   });
 
   it('handles a failed login flow', async () => {
     const errorMessage = 'Usuário ou senha inválidos';
     mockedLoginUser.mockRejectedValue(new Error(errorMessage));
 
-    render(<LoginScreen />);
+    render(<LoginScreen navigation={mockNavigation} route={mockRoute} />);
 
     fireEvent.changeText(screen.getByPlaceholderText('Usuário'), 'wronguser');
     fireEvent.changeText(screen.getByPlaceholderText('Senha'), 'wrongpass');
@@ -90,7 +123,7 @@ describe('<Login Screen />', () => {
   });
 
   it('shows an alert if username or password are not provided', () => {
-    render(<LoginScreen />);
+    render(<LoginScreen navigation={mockNavigation} route={mockRoute} />);
 
     fireEvent.press(screen.getByRole('button', { name: /entrar/i }));
 

@@ -8,7 +8,9 @@
     "module": "esnext",
     "moduleResolution": "bundler",
     "noUnusedLocals": false,
-    "tsBuildInfoFile": "dist/tsconfig.app.tsbuildinfo"
+    "tsBuildInfoFile": "dist/tsconfig.app.tsbuildinfo",
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true
   },
   "files": ["../node_modules/@nx/expo/typings/svg.d.ts"],
   "exclude": [

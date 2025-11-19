@@ -7,94 +7,86 @@ import {
   StyleSheet,
   Image,
 } from 'react-native';
+import { NativeStackScreenProps } from '@react-navigation/native-stack';
+import { AppStackParamList } from '../../navigation/AppNavigator';
+import OrdemDeServico from '../../db/models/OrdemDeServico';
+import { withObservables } from '@nozbe/watermelondb/react';
+import { database } from '../../db';
+import { observeOrdensDeServico } from '../../db/repositories/OrdemDeServicoRepository';
 
-interface OrdemServico {
-  id: string;
-  cliente: string;
-  descricao: string;
+export type NavProps = NativeStackScreenProps<AppStackParamList, 'ListOS'>;
+
+export interface DatabaseProps {
+  ordens: OrdemDeServico[];
 }
 
-export const ListOSScreen = () => {
-  const list: OrdemServico[] = [
-    { id: '1', cliente: 'Cliente A', descricao: 'Troca de peça' },
-    { id: '2', cliente: 'Cliente B', descricao: 'Manutenção geral' },
-    { id: '3', cliente: 'Cliente C', descricao: 'Instalação elétrica' },
-  ];
+export type Props = NavProps & DatabaseProps;
 
+interface ListItemProps {
+  item: OrdemDeServico;
+  isSelected: boolean;
+  onPress: () => void;
+  onLongPress: () => void;
+}
+
+const ListItem = React.memo(
+  ({ item, isSelected, onPress, onLongPress }: ListItemProps) => (
+    <TouchableOpacity
+      style={[styles.item, isSelected && styles.itemSelecionado]}
+      onPress={onPress}
+      onLongPress={onLongPress}
+    >
+      <View style={styles.textContainer}>
+        <Text style={[styles.titulo, isSelected && styles.textoSelecionado]}>
+          OS: {item.numeroOs}
+        </Text>
+        <Text
+          style={[styles.descricao, isSelected && styles.textoSelecionado]}
+          numberOfLines={1}
+        >
+          Status: {item.status}
+        </Text>
+      </View>
+    </TouchableOpacity>
+  )
+);
+
+export const RawListOSScreen = ({ ordens, navigation }: Props) => {
   const [selected, setSelected] = useState<string[]>([]);
   const [multiSelectMode, setMultiSelectMode] = useState(false);
 
   // Toque simples
   const handlePress = (id: string) => {
     if (multiSelectMode) {
-      // No modo múltiplo: adiciona ou remove da seleção
       setSelected((prev) => {
         const newSelection = prev.includes(id)
-          ? prev.filter((item) => item !== id)
+          ? prev.filter((itemId) => itemId !== id)
           : [...prev, id];
 
-        // Se não restar nenhum selecionado, sai do modo múltiplo
-        if (newSelection.length === 0) setMultiSelectMode(false);
+        if (newSelection.length === 0) {
+          setMultiSelectMode(false);
+        }
         return newSelection;
       });
     } else {
-      // No modo simples: seleciona apenas um
       setSelected((prev) => (prev.includes(id) ? [] : [id]));
     }
   };
 
   // Toque longo
   const handleLongPress = (id: string) => {
-    // Ativa o modo múltiplo, se ainda não estiver
-    if (!multiSelectMode) setMultiSelectMode(true);
-
-    // Adiciona ou remove o item da seleção
-    setSelected((prev) =>
-      prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id]
-    );
+    setMultiSelectMode(true);
+    setSelected((prev) => (prev.includes(id) ? prev : [...prev, id]));
   };
 
   const handleButtonPress = () => {
     const json = JSON.stringify({ ids: selected });
     console.log(json);
-  };
-
-  const renderItem = ({ item }: { item: OrdemServico }) => {
-    const isSelected = selected.includes(item.id);
-
-    return (
-      <TouchableOpacity
-        style={[styles.item, isSelected && styles.itemSelecionado]}
-        onPress={() => handlePress(item.id)}
-        onLongPress={() => handleLongPress(item.id)}
-      >
-        <View style={styles.textContainer}>
-          <Text style={[styles.titulo, isSelected && styles.textoSelecionado]}>
-            {item.cliente}
-          </Text>
-          <Text
-            style={[styles.descricao, isSelected && styles.textoSelecionado]}
-            numberOfLines={1}
-          >
-            {item.descricao}
-          </Text>
-        </View>
-      </TouchableOpacity>
-    );
+    console.log('Navegaria para outra tela com os IDs:', selected);
   };
 
   return (
     <View style={styles.container}>
-      <Image
-        source={require('../../../assets/images/logout.jpg')}
-        style={{
-          width: 40,
-          height: 40,
-          borderRadius: 20,
-          tintColor: '#007AFF',
-        }}
-      />
-
       <Text style={styles.header}>Ordens de Serviço</Text>
 
       <Text style={styles.labelSelected}>
@@ -102,10 +94,22 @@ export const ListOSScreen = () => {
       </Text>
 
       <FlatList
-        data={list}
+        data={ordens}
         keyExtractor={(item) => item.id}
-        renderItem={renderItem}
+        renderItem={({ item }) => (
+          <ListItem
+            item={item}
+            isSelected={selected.includes(item.id)}
+            onPress={() => handlePress(item.id)}
+            onLongPress={() => handleLongPress(item.id)}
+          />
+        )}
         contentContainerStyle={styles.lista}
+        ListEmptyComponent={
+          <Text style={styles.emptyText}>
+            Nenhuma Ordem de Serviço encontrada.
+          </Text>
+        }
       />
 
       {/* Botão inferior */}
@@ -123,12 +127,20 @@ export const ListOSScreen = () => {
             selected.length === 0 && styles.textoBotaoDesabilitado,
           ]}
         >
-          {selected.length === 0 ? 'Selecione uma OS' : `Visualizar`}
+          {selected.length === 0
+            ? 'Selecione uma OS'
+            : `Visualizar (${selected.length})`}
         </Text>
       </TouchableOpacity>
     </View>
   );
 };
+
+const enhance = withObservables([], () => ({
+  ordens: observeOrdensDeServico(),
+}));
+
+export const ListOSScreen = enhance(RawListOSScreen);
 
 const styles = StyleSheet.create({
   container: {
@@ -201,5 +213,11 @@ const styles = StyleSheet.create({
   },
   textoBotaoDesabilitado: {
     color: '#666',
+  },
+  emptyText: {
+    textAlign: 'center',
+    marginTop: 20,
+    fontSize: 16,
+    color: '#999',
   },
 });

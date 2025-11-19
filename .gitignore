@@ -78,3 +78,11 @@ error.log
 
 # Arquivos gerados pelo mobile
 mobile/coverage/
+
+# Pastas de build nativo geradas na raiz do monorepo
+/android/
+/ios/
+
+
+/mobile/android/
+/mobile/ios/

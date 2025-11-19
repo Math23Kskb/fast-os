@@ -1,17 +1,22 @@
 import React, { useState } from 'react';
 import {
-  View,
-  TextInput,
-  Button,
-  StyleSheet,
-  Alert,
   ActivityIndicator,
+  Alert,
+  Button,
+  DevSettings,
   Image,
+  StyleSheet,
+  TextInput,
+  View,
 } from 'react-native';
-import * as SecureStore from 'expo-secure-store';
-import { loginUser } from '../../services/authService';
+import { loginUser } from '../../api/services/authService';
+import { NativeStackScreenProps } from '@react-navigation/native-stack';
+import { RootStackParamList } from '../../types/navigation';
+import { setToken } from '../../api/tokenManager';
 
-export const LoginScreen = () => {
+export type Props = NativeStackScreenProps<RootStackParamList, 'Login'>;
+
+export const LoginScreen = ({ navigation }: Props) => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -27,10 +32,11 @@ export const LoginScreen = () => {
     try {
       const data = await loginUser({ username, password });
 
-      await SecureStore.setItemAsync('authToken', data.token);
+      if (data && data.token) {
+        await setToken(data.token);
 
-      Alert.alert('Sucesso!', 'Login realizado.');
-      // TODO: Implementar navegação para a tela principal (Home)
+        DevSettings.reload();
+      }
     } catch (error: unknown) {
       if (error instanceof Error) {
         Alert.alert('Erro no Login', error.message);
@@ -56,6 +62,8 @@ export const LoginScreen = () => {
         onChangeText={setUsername}
         autoCapitalize="none"
         keyboardType="default"
+        textContentType="none"
+        autoComplete="off"
       />
       <TextInput
         style={styles.input}
@@ -63,6 +71,8 @@ export const LoginScreen = () => {
         value={password}
         onChangeText={setPassword}
         secureTextEntry
+        textContentType="password"
+        autoComplete="password"
       />
       {isLoading ? (
         <ActivityIndicator

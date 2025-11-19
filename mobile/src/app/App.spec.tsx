@@ -1,34 +1,19 @@
-import * as React from 'react';
-import { fireEvent, render, screen } from '@testing-library/react-native';
-
+import React from 'react';
+import { render, screen } from '@testing-library/react-native';
 import App from './App';
-import { Linking } from 'react-native';
-import { LoginScreen } from '../screens/auth/LoginScreen';
-import { MockedInitialScreen } from '../__mocks__/InitialScreen';
+import { View } from 'react-native';
 
-jest.mock('react-native', () => {
-  const RN = jest.requireActual('react-native');
-
-  RN.Linking = {
-    openURL: jest.fn(),
-  };
-
-  return RN;
+jest.mock('../navigation/AppNavigator', () => {
+  const { View } = require('react-native');
+  return () => <View testID="app-navigator-mock" />;
 });
 
-jest.mock('../screens/auth/LoginScreen', () => ({
-  LoginScreen: () => <MockedInitialScreen />,
-}));
-
-jest.mock('../screens/listos/ListOSScreen', () => ({
-  ListOSScreen: () => <MockedInitialScreen />,
-}));
-
 describe('<App />', () => {
-  it('should render the initial application screen without crashing', () => {
+  it('deve renderizar o AppNavigator mockado', () => {
     render(<App />);
 
-    const initialScreen = screen.getByTestId('mock-initial-screen');
-    expect(initialScreen).toBeTruthy();
+    const appNavigatorMock = screen.getByTestId('app-navigator-mock');
+
+    expect(appNavigatorMock).toBeTruthy();
   });
 });

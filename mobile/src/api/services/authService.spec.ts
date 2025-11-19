@@ -1,10 +1,8 @@
-// mobile/src/services/authService.spec.ts
-
-import apiClient from './api';
+import apiClient from '../apiClient';
 import { loginUser } from './authService';
-import { LoginResponse } from '../types/auth';
+import { LoginResponse } from '../../types/auth';
 
-jest.mock('./api');
+jest.mock('../apiClient');
 
 const mockedApiClient = apiClient as jest.Mocked<typeof apiClient>;
 
@@ -42,7 +40,7 @@ describe('authService', () => {
     mockedApiClient.post.mockRejectedValue(apiError);
 
     await expect(loginUser(credentials)).rejects.toThrow(
-      'Erro ao tentar fazer login.'
+      'Ocorreu um problema no servidor. Por favor, tente novamente mais tarde.'
     );
     expect(mockedApiClient.post).toHaveBeenCalledWith(
       '/auth/login',
@@ -57,7 +55,7 @@ describe('authService', () => {
     mockedApiClient.post.mockRejectedValue(networkError);
 
     await expect(loginUser(credentials)).rejects.toThrow(
-      'Erro de rede ou servidor indisponivel.'
+      'Ocorreu um erro inesperado ao tentar fazer o login.'
     );
     expect(mockedApiClient.post).toHaveBeenCalledWith(
       '/auth/login',

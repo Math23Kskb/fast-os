@@ -1,5 +1,13 @@
 {
   "plugins": [
-    "expo-secure-store"
-  ]
+    ["expo-secure-store"],
+    ["@lovesworking/watermelondb-expo-plugin-sdk-52-plus"],
+    ["expo-build-properties"]
+  ],
+  "android": {
+    "package": "com.mck2310.fastossource",
+    "packageOptions": {
+      "pickFirst": ["**/libc++_shared.so"]
+    }
+  }
 }
