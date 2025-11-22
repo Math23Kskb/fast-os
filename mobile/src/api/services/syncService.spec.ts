@@ -2,6 +2,9 @@ import { synchronize } from '@nozbe/watermelondb/sync';
 import apiClient from '../apiClient';
 import { sync } from './syncService';
 
+jest.mock('../../db', () => ({
+  database: {},
+}));
 jest.mock('@nozbe/watermelondb/sync');
 jest.mock('../apiClient');
 
@@ -9,8 +12,17 @@ const mockedSynchronize = synchronize as jest.Mock;
 const mockedApiClient = apiClient as jest.Mocked<typeof apiClient>;
 
 describe('syncService', () => {
+  let consoleSpy: jest.SpyInstance;
+
   beforeEach(() => {
     jest.clearAllMocks();
+    consoleSpy = jest.spyOn(console, 'error').mockImplementation(() => {
+      /* mock */
+    });
+  });
+
+  afterEach(() => {
+    consoleSpy.mockRestore();
   });
 
   it('deve chamar a função synchronize do WatermelonDB', async () => {
@@ -21,10 +33,9 @@ describe('syncService', () => {
 
   it('pullChanges deve chamar o apiClient.get e processar a resposta com sucesso', async () => {
     const mockApiResponse = {
-      status: 200, // <-- Adicione o status
+      status: 200,
       data: {
         changes: {
-          // Adicione dados de exemplo para o teste ser mais robusto
           ordensDeServico: { created: [{ id: 'os1', numero_os: '123' }] },
         },
         timestamp: 12345,
@@ -77,5 +88,45 @@ describe('syncService', () => {
     await syncConfig.pushChanges({ changes: mockChanges, lastPulledAt: 12345 });
 
     expect(mockedApiClient.post).toHaveBeenCalledWith('/sync', mockChanges);
+  });
+
+  it('deve lidar com erros durante o pullChanges', async () => {
+    (synchronize as jest.Mock).mockImplementation(async ({ pullChanges }) => {
+      await pullChanges({ lastPulledAt: null });
+    });
+
+    const { default: apiClient } = require('../apiClient');
+    apiClient.get.mockRejectedValue(new Error('Falha na rede'));
+
+    try {
+      await sync();
+    } catch (e) {
+      // Erro esperado
+    }
+
+    expect(consoleSpy).toHaveBeenCalledWith(
+      expect.stringContaining('Falha ao puxar dados'),
+      expect.any(Error)
+    );
+  });
+
+  it('deve lidar com erros durante o pushChanges', async () => {
+    (synchronize as jest.Mock).mockImplementation(async ({ pushChanges }) => {
+      await pushChanges({ changes: { someTable: [] }, lastPulledAt: 1000 });
+    });
+
+    const erroSimulado = new Error('Erro no envio');
+    (apiClient.post as jest.Mock).mockRejectedValue(erroSimulado);
+
+    try {
+      await sync();
+    } catch (e) {
+      // erro esperado
+    }
+
+    expect(consoleSpy).toHaveBeenCalledWith(
+      expect.stringContaining('Falha ao enviar dados'),
+      expect.any(Error)
+    );
   });
 });

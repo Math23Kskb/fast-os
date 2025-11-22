@@ -1,35 +1,34 @@
-import { database } from '..';
 import { findOrdemDeServicoById } from './OrdemDeServicoRepository';
 
-jest.mock('..');
+const mockFind = jest.fn();
+const mockCollection = { find: mockFind };
 
-const mockedDatabase = database as jest.Mocked<typeof database>;
+jest.mock('../../db', () => ({
+  database: {
+    get: jest.fn(() => mockCollection),
+  },
+}));
 
 describe('OrdemDeServicoRepository', () => {
-  it('findOrdemDeServicoById deve chamar o método find do WatermelonDB', async () => {
-    const mockFind = jest
-      .fn()
-      .mockResolvedValue({ id: 'os1', numeroOs: '123' });
-    mockedDatabase.get.mockReturnValue({
-      find: mockFind,
-    } as any);
-
-    const osId = 'os1';
-    await findOrdemDeServicoById(osId);
-
-    expect(mockedDatabase.get).toHaveBeenCalledWith('ordens_de_servico');
-
-    expect(mockFind).toHaveBeenCalledWith(osId);
+  beforeEach(() => {
+    jest.clearAllMocks();
   });
 
-  it('findOrdemDeServicoById deve retornar null se o registro não for encontrado', async () => {
-    const mockFind = jest.fn().mockRejectedValue(new Error('Record not found'));
-    mockedDatabase.get.mockReturnValue({
-      find: mockFind,
-    } as any);
+  it('deve retornar a OS quando encontrada', async () => {
+    const mockOS = { id: '123', numeroOs: 'OS-TESTE' };
+    mockFind.mockResolvedValue(mockOS);
 
-    const os = await findOrdemDeServicoById('id-nao-existe');
+    const result = await findOrdemDeServicoById('123');
 
-    expect(os).toBeNull();
+    expect(mockFind).toHaveBeenCalledWith('123');
+    expect(result).toEqual(mockOS);
+  });
+
+  it('deve retornar null quando falhar ao buscar OS', async () => {
+    mockFind.mockRejectedValue(new Error('Registro não encontrado'));
+
+    const result = await findOrdemDeServicoById('id-invalido');
+
+    expect(result).toBeNull();
   });
 });

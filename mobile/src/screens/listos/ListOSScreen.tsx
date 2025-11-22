@@ -1,143 +1,87 @@
-import React, { useState } from 'react';
+import React from 'react';
 import {
   View,
   Text,
   TouchableOpacity,
   FlatList,
   StyleSheet,
-  Image,
+  Alert,
 } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { AppStackParamList } from '../../navigation/AppNavigator';
-import OrdemDeServico from '../../db/models/OrdemDeServico';
 import { withObservables } from '@nozbe/watermelondb/react';
 import { database } from '../../db';
-import { observeOrdensDeServico } from '../../db/repositories/OrdemDeServicoRepository';
+import Visita from '../../db/models/Visita';
+import { AppStackParamList } from '../../types/navigation';
+import { switchMap } from 'rxjs/operators';
 
 export type NavProps = NativeStackScreenProps<AppStackParamList, 'ListOS'>;
 
 export interface DatabaseProps {
-  ordens: OrdemDeServico[];
+  visitas: Visita[];
 }
 
 export type Props = NavProps & DatabaseProps;
 
-interface ListItemProps {
-  item: OrdemDeServico;
-  isSelected: boolean;
+const VisitaItem = ({
+  item,
+  onPress,
+}: {
+  item: Visita;
   onPress: () => void;
-  onLongPress: () => void;
-}
+}) => (
+  <TouchableOpacity style={styles.item} onPress={onPress}>
+    <View style={styles.textContainer}>
+      <Text style={styles.titulo}>Visita</Text>
+      <Text style={styles.subtitulo}>ID: {item.id.slice(0, 8)}...</Text>
 
-const ListItem = React.memo(
-  ({ item, isSelected, onPress, onLongPress }: ListItemProps) => (
-    <TouchableOpacity
-      style={[styles.item, isSelected && styles.itemSelecionado]}
-      onPress={onPress}
-      onLongPress={onLongPress}
-    >
-      <View style={styles.textContainer}>
-        <Text style={[styles.titulo, isSelected && styles.textoSelecionado]}>
-          OS: {item.numeroOs}
-        </Text>
+      {/* Status colorido */}
+      <View style={styles.statusContainer}>
+        <Text style={styles.labelStatus}>Status:</Text>
         <Text
-          style={[styles.descricao, isSelected && styles.textoSelecionado]}
-          numberOfLines={1}
+          style={[
+            styles.statusValor,
+            item.status === 'CONCLUIDA'
+              ? styles.statusVerde
+              : styles.statusAzul,
+          ]}
         >
-          Status: {item.status}
+          {item.status || 'PENDENTE'}
         </Text>
       </View>
-    </TouchableOpacity>
-  )
+    </View>
+
+    <Text style={styles.arrow}>→</Text>
+  </TouchableOpacity>
 );
 
-export const RawListOSScreen = ({ ordens, navigation }: Props) => {
-  const [selected, setSelected] = useState<string[]>([]);
-  const [multiSelectMode, setMultiSelectMode] = useState(false);
-
-  // Toque simples
-  const handlePress = (id: string) => {
-    if (multiSelectMode) {
-      setSelected((prev) => {
-        const newSelection = prev.includes(id)
-          ? prev.filter((itemId) => itemId !== id)
-          : [...prev, id];
-
-        if (newSelection.length === 0) {
-          setMultiSelectMode(false);
-        }
-        return newSelection;
-      });
-    } else {
-      setSelected((prev) => (prev.includes(id) ? [] : [id]));
-    }
-  };
-
-  // Toque longo
-  const handleLongPress = (id: string) => {
-    setMultiSelectMode(true);
-    setSelected((prev) => (prev.includes(id) ? prev : [...prev, id]));
-  };
-
-  const handleButtonPress = () => {
-    const json = JSON.stringify({ ids: selected });
-    console.log(json);
-    console.log('Navegaria para outra tela com os IDs:', selected);
+export const RawListOSScreen = ({ visitas, navigation }: Props) => {
+  const handlePressVisita = (visitaId: string) => {
+    navigation.navigate('InfoOS', { visitaId });
   };
 
   return (
     <View style={styles.container}>
-      <Text style={styles.header}>Ordens de Serviço</Text>
-
-      <Text style={styles.labelSelected}>
-        {multiSelectMode ? selected.length + ' selecionado(s)' : ''}
-      </Text>
+      <Text style={styles.header}>Minhas Visitas</Text>
 
       <FlatList
-        data={ordens}
+        data={visitas}
         keyExtractor={(item) => item.id}
         renderItem={({ item }) => (
-          <ListItem
-            item={item}
-            isSelected={selected.includes(item.id)}
-            onPress={() => handlePress(item.id)}
-            onLongPress={() => handleLongPress(item.id)}
-          />
+          <VisitaItem item={item} onPress={() => handlePressVisita(item.id)} />
         )}
         contentContainerStyle={styles.lista}
         ListEmptyComponent={
-          <Text style={styles.emptyText}>
-            Nenhuma Ordem de Serviço encontrada.
-          </Text>
+          <View style={styles.emptyContainer}>
+            <Text style={styles.emptyText}>Nenhuma visita agendada.</Text>
+          </View>
         }
       />
-
-      {/* Botão inferior */}
-      <TouchableOpacity
-        style={[
-          styles.botao,
-          selected.length === 0 && styles.botaoDesabilitado,
-        ]}
-        disabled={selected.length === 0}
-        onPress={handleButtonPress}
-      >
-        <Text
-          style={[
-            styles.textoBotao,
-            selected.length === 0 && styles.textoBotaoDesabilitado,
-          ]}
-        >
-          {selected.length === 0
-            ? 'Selecione uma OS'
-            : `Visualizar (${selected.length})`}
-        </Text>
-      </TouchableOpacity>
     </View>
   );
 };
 
 const enhance = withObservables([], () => ({
-  ordens: observeOrdensDeServico(),
+  visitas: database.collections.get<Visita>('visitas').query().observe(),
 }));
 
 export const ListOSScreen = enhance(RawListOSScreen);
@@ -147,77 +91,86 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#f5f6fa',
     paddingHorizontal: 16,
-    paddingTop: 40,
+    paddingTop: 20,
   },
   header: {
-    fontSize: 22,
+    fontSize: 24,
     fontWeight: 'bold',
-    marginBottom: 12,
+    marginBottom: 20,
+    color: '#2c3e50',
     textAlign: 'center',
   },
-  iconBack: {},
-  labelSelected: {
-    fontSize: 13,
-    fontWeight: 'bold',
-    marginBottom: 12,
-    textAlign: 'left',
-  },
   lista: {
-    paddingBottom: 16,
+    paddingBottom: 20,
   },
   item: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: '#fff',
-    padding: 12,
-    borderRadius: 8,
-    marginBottom: 8,
-    borderWidth: 1,
-    borderColor: '#ddd',
-  },
-  itemSelecionado: {
-    backgroundColor: '#4a69bd33',
-    borderColor: '#4a69bd',
+    padding: 16,
+    borderRadius: 12,
+    marginBottom: 12,
+    // Sombra suave
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
   },
   textContainer: {
     flex: 1,
   },
   titulo: {
-    fontSize: 16,
+    fontSize: 18,
     fontWeight: 'bold',
+    color: '#34495e',
   },
-  descricao: {
-    fontSize: 14,
-    color: '#555',
+  subtitulo: {
+    fontSize: 12,
+    color: '#95a5a6',
+    marginBottom: 8,
   },
-  textoSelecionado: {
-    color: '#4a69bd',
-  },
-  botao: {
-    position: 'absolute',
-    bottom: 45,
-    left: 20,
-    right: 20,
-    backgroundColor: '#4a69bd',
-    paddingVertical: 14,
-    borderRadius: 10,
+  statusContainer: {
+    flexDirection: 'row',
     alignItems: 'center',
   },
-  botaoDesabilitado: {
-    backgroundColor: '#ccc',
+  labelStatus: {
+    fontSize: 14,
+    color: '#7f8c8d',
+    marginRight: 4,
   },
-  textoBotao: {
-    color: '#fff',
-    fontSize: 16,
+  statusValor: {
+    fontSize: 14,
     fontWeight: 'bold',
   },
-  textoBotaoDesabilitado: {
-    color: '#666',
+  statusAzul: {
+    color: '#2980b9',
+  },
+  statusVerde: {
+    color: '#27ae60',
+  },
+  arrow: {
+    fontSize: 24,
+    color: '#bdc3c7',
+    marginLeft: 10,
+  },
+  emptyContainer: {
+    marginTop: 50,
+    alignItems: 'center',
   },
   emptyText: {
-    textAlign: 'center',
-    marginTop: 20,
     fontSize: 16,
-    color: '#999',
+    color: '#95a5a6',
+    marginBottom: 20,
+  },
+  buttonTeste: {
+    backgroundColor: '#3498db',
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    borderRadius: 8,
+  },
+  buttonText: {
+    color: '#fff',
+    fontWeight: 'bold',
   },
 });

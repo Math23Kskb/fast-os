@@ -6,6 +6,9 @@ import { RootStackParamList, AppStackParamList } from '../types/navigation';
 import { getToken } from '../api/tokenManager';
 import { LoginScreen } from '../screens/auth/LoginScreen';
 import { ListOSScreen } from '../screens/listos/ListOSScreen';
+import RegistroEtapaScreen from '../screens/timeline/RegistroEtapaScreen';
+import DefectFormScreen from '../screens/form/DefectFormScreen';
+import InfoOSScreen from '../screens/details/InfoOsScreen';
 import { ActivityIndicator, View } from 'react-native';
 import { sync } from '../api/services/syncService';
 
@@ -14,7 +17,7 @@ const RootStackNav = createNativeStackNavigator<RootStackParamList>();
 
 const AppStack = () => {
   return (
-    <AppStackNav.Navigator>
+    <AppStackNav.Navigator initialRouteName="ListOS">
       <AppStackNav.Screen
         name="ListOS"
         component={ListOSScreen}
@@ -22,6 +25,25 @@ const AppStack = () => {
           title: 'Ordens de Serviço',
           headerBackVisible: false,
         }}
+      />
+      <AppStackNav.Screen
+        name="RegistroEtapa"
+        component={RegistroEtapaScreen}
+        options={{
+          title: 'Acompanhamento',
+        }}
+      />
+      <AppStackNav.Screen
+        name="DefectForm"
+        component={DefectFormScreen}
+        options={{
+          title: 'Execução do Serviço',
+        }}
+      />
+      <AppStackNav.Screen
+        name="InfoOS"
+        component={InfoOSScreen}
+        options={{ title: 'Detalhes da OS' }}
       />
       {/* Outras telas do app viriam aqui */}
     </AppStackNav.Navigator>

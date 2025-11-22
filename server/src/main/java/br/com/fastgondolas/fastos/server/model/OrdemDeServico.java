@@ -66,4 +66,7 @@ public class OrdemDeServico extends BaseEntity{
 
     @OneToMany(mappedBy = "ordemDeServico", fetch = FetchType.LAZY)
     private List<Anexo> anexos;
+
+    @ManyToMany(mappedBy = "ordensDeServico", fetch = FetchType.LAZY)
+    private List<Visita> visitas;
 }

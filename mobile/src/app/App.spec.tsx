@@ -1,7 +1,6 @@
 import React from 'react';
 import { render, screen } from '@testing-library/react-native';
 import App from './App';
-import { View } from 'react-native';
 
 jest.mock('../navigation/AppNavigator', () => {
   const { View } = require('react-native');

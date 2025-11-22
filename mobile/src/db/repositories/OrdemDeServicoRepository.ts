@@ -1,10 +1,6 @@
 import { database } from '..';
 import OrdemDeServico from '../models/OrdemDeServico';
 
-export const observeOrdensDeServico = () => {
-  return database.get<OrdemDeServico>('ordens_de_servico').query().observe();
-};
-
 export const findOrdemDeServicoById = async (
   osId: string
 ): Promise<OrdemDeServico | null> => {

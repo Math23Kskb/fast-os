@@ -1,13 +1,12 @@
 import React from 'react';
 import { fireEvent, render, screen } from '@testing-library/react-native';
 import { NavProps, RawListOSScreen } from './ListOSScreen';
-import OrdemDeServico from '../../db/models/OrdemDeServico';
+import Visita from '../../db/models/Visita';
 
-const mockOrdens = [
-  { id: 'os1', numeroOs: '1001', status: 'AGENDADA' },
-  { id: 'os2', numeroOs: '1002', status: 'EM ANDAMENTO' },
-  { id: 'os3', numeroOs: '1003', status: 'CONCLUÍDA' },
-] as OrdemDeServico[];
+const mockVisitas = [
+  { id: 'visita1', status: 'AGENDADA', dataChegadaCliente: null },
+  { id: 'visita2', status: 'CONCLUIDA', dataChegadaCliente: new Date() },
+] as unknown as Visita[];
 
 const mockNavigationProps: NavProps = {
   navigation: {
@@ -19,58 +18,37 @@ const mockNavigationProps: NavProps = {
   } as any,
 };
 
-// eslint-disable-next-line @typescript-eslint/no-empty-function
-const mockConsoleLog = jest.spyOn(console, 'log').mockImplementation(() => {});
-
 describe('<ListOSScreen />', () => {
   beforeEach(() => {
     jest.clearAllMocks();
   });
 
-  it('renderiza os itens da lista corretamente', async () => {
-    render(<RawListOSScreen ordens={mockOrdens} {...mockNavigationProps} />);
+  it('renderiza a lista de visitas corretamente', () => {
+    render(<RawListOSScreen visitas={mockVisitas} {...mockNavigationProps} />);
 
-    expect(screen.getByText('OS: 1001')).toBeTruthy();
-    expect(screen.getByText('OS: 1002')).toBeTruthy();
-    expect(screen.getByText('Selecione uma OS')).toBeTruthy();
+    expect(screen.getAllByText('Visita')).toHaveLength(mockVisitas.length);
+    expect(screen.getByText('ID: visita1...')).toBeTruthy();
+    expect(screen.getByText('ID: visita2...')).toBeTruthy();
+
+    expect(screen.getByText('AGENDADA')).toBeTruthy();
+    expect(screen.getByText('CONCLUIDA')).toBeTruthy();
   });
 
-  it('seleciona e desseleciona com toque simples', async () => {
-    render(<RawListOSScreen ordens={mockOrdens} {...mockNavigationProps} />);
-    const item1 = screen.getByText('OS: 1001');
+  it('navega para a tela InfoOS ao clicar em uma visita', () => {
+    render(<RawListOSScreen visitas={mockVisitas} {...mockNavigationProps} />);
 
+    const item1 = screen.getByText('ID: visita1...');
     fireEvent.press(item1);
 
-    expect(screen.getByText('Visualizar (1)')).toBeTruthy();
-
-    fireEvent.press(item1);
-    expect(screen.getByText('Selecione uma OS')).toBeTruthy();
-  });
-
-  it('ativa o modo multiseleção com toque longo', async () => {
-    render(<RawListOSScreen ordens={mockOrdens} {...mockNavigationProps} />);
-    const item1 = screen.getByText('OS: 1001');
-    const item2 = screen.getByText('OS: 1002');
-
-    fireEvent(item1, 'longPress');
-    expect(screen.getByText('1 selecionado(s)')).toBeTruthy();
-
-    fireEvent.press(item2);
-    expect(screen.getByText('2 selecionado(s)')).toBeTruthy();
-    expect(screen.getByText('Visualizar (2)')).toBeTruthy();
-  });
-
-  it('executa handleButtonPress e loga as OSs selecionadas', async () => {
-    render(<RawListOSScreen ordens={mockOrdens} {...mockNavigationProps} />);
-
-    fireEvent.press(screen.getByText('OS: 1001'));
-    fireEvent.press(screen.getByText('Visualizar (1)'));
-
-    expect(mockConsoleLog).toHaveBeenCalledWith(
-      'Navegaria para outra tela com os IDs:',
-      ['os1']
+    expect(mockNavigationProps.navigation.navigate).toHaveBeenCalledWith(
+      'InfoOS',
+      { visitaId: 'visita1' }
     );
+  });
 
-    expect(mockNavigationProps.navigation.navigate).not.toHaveBeenCalled();
+  it('mostra mensagem de lista vazia se não houver visitas', () => {
+    render(<RawListOSScreen visitas={[]} {...mockNavigationProps} />);
+
+    expect(screen.getByText('Nenhuma visita agendada.')).toBeTruthy();
   });
 });

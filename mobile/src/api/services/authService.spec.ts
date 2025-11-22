@@ -5,7 +5,9 @@ import { LoginResponse } from '../../types/auth';
 jest.mock('../apiClient');
 
 const mockedApiClient = apiClient as jest.Mocked<typeof apiClient>;
-
+const consoleSpy = jest.spyOn(console, 'error').mockImplementation(() => {
+  /* mock */
+});
 describe('authService', () => {
   beforeEach(() => {
     jest.clearAllMocks();
@@ -61,5 +63,16 @@ describe('authService', () => {
       '/auth/login',
       credentials
     );
+  });
+
+  it('deve lançar erro genérico quando a API falhar', async () => {
+    const error = new Error('Network Error');
+    (apiClient.post as jest.Mock).mockRejectedValue(error);
+
+    await expect(
+      loginUser({ username: 'usuario', password: 'wrong_pass' })
+    ).rejects.toThrow('Ocorreu um erro inesperado ao tentar fazer o login.');
+
+    expect(consoleSpy).toHaveBeenCalled();
   });
 });

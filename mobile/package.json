@@ -20,6 +20,8 @@
     "expo-sqlite": "~15.2.14",
     "expo-status-bar": "*",
     "expo-system-ui": "*",
+    "expo-image-picker": "*",
+    "expo-checkbox": "*",
     "jest-expo": "*",
     "metro-config": "*",
     "metro-resolver": "*",

@@ -7,70 +7,157 @@ import {
   Image,
   TouchableOpacity,
   StyleSheet,
+  ScrollView,
+  ActivityIndicator,
 } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
-import { EtapasService, EtapaKey, EtapasData } from '../services/EtapasService';
+import { withObservables } from '@nozbe/watermelondb/react';
+import { NativeStackScreenProps } from '@react-navigation/native-stack';
+import { database } from '../../db';
+import Visita from '../../db/models/Visita';
+import OrdemDeServico from '../../db/models/OrdemDeServico';
+import { AppStackParamList } from '../../types/navigation';
+import { of } from 'rxjs';
+import { switchMap } from 'rxjs/operators';
 
-const service = new EtapasService();
+const ETAPAS_ORDENADAS = [
+  { key: 'dataSaidaEmpresa', label: 'Saída da Empresa' },
+  { key: 'dataChegadaCliente', label: 'Chegada no Cliente' },
+  { key: 'dataSaidaCliente', label: 'Saída do Cliente' },
+  { key: 'dataChegadaEmpresa', label: 'Chegada na Empresa' },
+] as const;
 
-export default function RegistroEtapaScreen() {
-  const [etapas, setEtapas] = useState<EtapasData>({});
-  const [etapaAtual, setEtapaAtual] = useState<EtapaKey | null>(null);
+type EtapaKey = (typeof ETAPAS_ORDENADAS)[number]['key'];
 
+interface DatabaseProps {
+  visita: Visita | null;
+  ordens: OrdemDeServico[];
+}
+
+type NavProps = NativeStackScreenProps<AppStackParamList, 'RegistroEtapa'>;
+type Props = NavProps & DatabaseProps;
+
+export const RawRegistroEtapaScreen = ({
+  visita,
+  ordens,
+  navigation,
+}: Props) => {
   const [imagem, setImagem] = useState<string | null>(null);
-  const [horario, setHorario] = useState('');
-  const [confirmado, setConfirmado] = useState(false);
+  const [horarioManual, setHorarioManual] = useState('');
+  const [editandoHorario, setEditandoHorario] = useState(false);
+  const [saving, setSaving] = useState(false);
 
-  useEffect(() => {
-    (async () => {
-      const data = await service.getEtapas();
-      setEtapas(data);
+  if (!visita) {
+    return (
+      <View style={styles.container}>
+        <Text style={{ color: 'red', textAlign: 'center', marginTop: 50 }}>
+          Erro: Visita não encontrada no banco de dados.
+        </Text>
+        <TouchableOpacity
+          onPress={() => navigation.goBack()}
+          style={styles.buttonDisabled}
+        >
+          <Text>Voltar</Text>
+        </TouchableOpacity>
+      </View>
+    );
+  }
 
-      const proxima = EtapasService.getProximaEtapa(data);
-      setEtapaAtual(proxima);
-    })();
-  }, []);
+  const getProximaEtapa = (): { key: EtapaKey; label: string } | null => {
+    for (const etapa of ETAPAS_ORDENADAS) {
+      if (!visita[etapa.key]) {
+        return etapa;
+      }
+    }
+    return null;
+  };
 
-  const registrarHorario = () => {
-    const agora = new Date().toISOString();
-    setHorario(agora);
+  const proximaEtapa = getProximaEtapa();
+
+  const temOsPendente = ordens.some((os) => {
+    const status = os.status;
+    return status !== 'CONCLUIDA' && status !== 'CANCELADA';
+  });
+
+  const isBloqueado = proximaEtapa?.key === 'dataSaidaCliente' && temOsPendente;
+
+  const handleIniciarRegistro = () => {
+    if (isBloqueado) return;
+
+    const agora = new Date();
+    setHorarioManual(agora.toISOString());
 
     Alert.alert(
-      'Horário registrado',
-      'Deseja editar manualmente?',
+      'Confirmar Horario',
+      `O horário registrado será: ${agora.toLocaleTimeString()}. Deseja manter ou editar?`,
       [
         {
-          text: 'Sim',
-          onPress: () => setConfirmado(true),
+          text: 'Editar',
+          onPress: () => setEditandoHorario(true),
         },
         {
-          text: 'Não',
-          onPress: () => salvarEtapa(agora),
+          text: 'Confirmar',
+          onPress: () => salvarEtapaNoBanco(agora),
         },
       ],
       { cancelable: false }
     );
   };
 
-  const salvarEtapa = async (valorHorario: string) => {
-    if (!etapaAtual) return;
+  const salvarEtapaNoBanco = async (dataParaSalvar: Date) => {
+    if (!proximaEtapa) return;
+    setSaving(true);
 
-    await service.atualizarEtapa(etapaAtual, valorHorario, imagem ?? undefined);
+    try {
+      await database.write(async () => {
+        await visita.update((v) => {
+          v[proximaEtapa.key] = dataParaSalvar;
 
-    Alert.alert('Sucesso', 'Etapa registrada com sucesso!');
+          if (proximaEtapa.key === 'dataSaidaEmpresa')
+            v.status = 'EM_DESLOCAMENTO';
+          if (proximaEtapa.key === 'dataChegadaCliente')
+            v.status = 'EM_ATENDIMENTO';
+          if (proximaEtapa.key === 'dataSaidaCliente') v.status = 'RETORNANDO';
+          if (proximaEtapa.key === 'dataChegadaEmpresa') v.status = 'CONCLUIDA';
+        });
+
+        if (imagem) {
+          const anexosCollection = database.collections.get('anexos');
+          await anexosCollection.create((anexo: any) => {
+            anexo.urlArquivo = imagem;
+            anexo.tipoArquivo = 'FOTO';
+            anexo.descricao = `Etapa: ${proximaEtapa.label}`;
+            anexo.visitaId = visita.id;
+            anexo.ordemDeServicoId = 'vinculo_visita_temp';
+          });
+        }
+      });
+
+      Alert.alert('Sucesso', `${proximaEtapa.label} registrada!`);
+
+      setImagem(null);
+      setEditandoHorario(false);
+      setHorarioManual('');
+    } catch (error) {
+      console.error(error);
+      Alert.alert('Erro', 'Falha ao salvar no banco de dados.');
+    } finally {
+      setSaving(false);
+    }
   };
 
-  const escolherImagem = async () => {
-    const perm = await ImagePicker.requestCameraPermissionsAsync();
-    const permGal = await ImagePicker.requestMediaLibraryPermissionsAsync();
+  const handlePickImage = async () => {
+    if (isBloqueado) return;
 
-    if (!perm.granted || !permGal.granted) {
-      Alert.alert('Permissões necessárias', 'Habilite a câmera e galeria.');
+    const perm = await ImagePicker.requestCameraPermissionsAsync();
+    if (!perm.granted) {
+      Alert.alert('Permissão necessária', 'Habilite a câmera.');
       return;
     }
 
-    const result = await ImagePicker.launchImageLibraryAsync({
-      quality: 0.6,
+    const result = await ImagePicker.launchCameraAsync({
+      quality: 0.5,
+      allowsEditing: false,
     });
 
     if (!result.canceled) {
@@ -78,81 +165,198 @@ export default function RegistroEtapaScreen() {
     }
   };
 
-  const renderChecklist = () => {
-    const ordem: EtapaKey[] = [
-      'saidaEmpresa',
-      'chegadaCliente',
-      'saidaCliente',
-      'chegadaEmpresa',
-    ];
+  const handlePressOS = (osId: string) => {
+    const chegou = !!visita.dataChegadaCliente;
+    const saiu = !!visita.dataSaidaCliente;
 
-    return ordem.map((etapa) => (
-      <View key={etapa} style={styles.checkboxContainer}>
-        <Text style={styles.checkboxLabel}>{etapa}</Text>
-        <Text>{etapas[etapa] ? '✔' : '○'}</Text>
-      </View>
-    ));
+    if (!chegou) {
+      Alert.alert('Aguarde', 'Registre a chegada antes de iniciar o serviço.');
+      return;
+    }
+    if (saiu) {
+      Alert.alert('Fechado', 'Visita já encerrada no local.');
+      return;
+    }
+    navigation.navigate('DefectForm', { osId });
+  };
+
+  const renderChecklist = () => {
+    return ETAPAS_ORDENADAS.map((etapa) => {
+      const dataRealizada: Date | undefined = visita[etapa.key];
+      const isConcluido = !!dataRealizada;
+
+      return (
+        <View key={etapa.key} style={styles.checkboxContainer}>
+          <Text style={styles.checkboxLabel}>{etapa.label}</Text>
+          <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+            {isConcluido && (
+              <Text style={styles.dataText}>
+                {dataRealizada.toLocaleTimeString([], {
+                  hour: '2-digit',
+                  minute: '2-digit',
+                })}
+              </Text>
+            )}
+            <Text style={[styles.checkIcon, isConcluido && styles.checkActive]}>
+              {isConcluido ? '✔' : '○'}
+            </Text>
+          </View>
+        </View>
+      );
+    });
   };
 
   return (
-    <View style={styles.container}>
+    <ScrollView style={styles.container}>
       <Text style={styles.title}>Registro de Etapa</Text>
-
-      {etapaAtual ? (
-        <Text style={styles.label}>
-          Próxima etapa:{' '}
-          <Text style={{ fontWeight: 'bold' }}>{etapaAtual}</Text>
-        </Text>
-      ) : (
-        <Text style={styles.label}>Todas as etapas foram concluídas.</Text>
-      )}
 
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Progresso</Text>
         {renderChecklist()}
       </View>
 
-      {/* Botão Registrar Horário */}
-      <TouchableOpacity
-        style={styles.categoryButton}
-        onPress={registrarHorario}
-      >
-        <Text style={styles.categoryText}>Registrar horário</Text>
-      </TouchableOpacity>
+      {/* Lista de OSs */}
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>Ordens de Serviço</Text>
+        {ordens.length === 0 ? (
+          <Text style={styles.emptyText}>Nenhuma OS vinculada.</Text>
+        ) : (
+          ordens.map((os) => (
+            <TouchableOpacity
+              key={os.id}
+              style={styles.osItem}
+              onPress={() => handlePressOS(os.id)}
+            >
+              <View>
+                <Text style={{ fontWeight: 'bold' }}>OS #{os.numeroOs}</Text>
+                <Text
+                  style={{
+                    color: os.status === 'CONCLUIDA' ? 'green' : '#555',
+                  }}
+                >
+                  {os.status || '--N/A--'}
+                </Text>
+              </View>
+              <Text>→</Text>
+            </TouchableOpacity>
+          ))
+        )}
+      </View>
 
-      {/* Editar horário manualmente */}
-      {confirmado && (
-        <>
-          <Text style={styles.label}>Editar horário:</Text>
-          <TextInput
-            style={styles.input}
-            value={horario}
-            onChangeText={setHorario}
-          />
+      {/* Área de Ação (Próxima Etapa) */}
+      {proximaEtapa ? (
+        <View style={styles.actionContainer}>
+          <Text style={styles.labelProxima}>Próxima: {proximaEtapa.label}</Text>
+
+          {isBloqueado && (
+            <View style={styles.warningContainer}>
+              <Text style={styles.warningText}>
+                ⚠️ Você deve concluir ou cancelar todas as OSs antes de
+                registrar a saída.
+              </Text>
+            </View>
+          )}
 
           <TouchableOpacity
-            style={[styles.categoryButton, { marginTop: 10 }]}
-            onPress={() => salvarEtapa(horario)}
+            style={[styles.imageButton, isBloqueado && styles.buttonDisabled]}
+            onPress={handlePickImage}
           >
-            <Text style={styles.categoryText}>Confirmar</Text>
+            <Text
+              style={[
+                styles.imageButtonText,
+                isBloqueado && styles.textDisabled,
+              ]}
+            >
+              {imagem ? '📷 Foto Anexada' : '📷 Foto (Opcional)'}
+            </Text>
           </TouchableOpacity>
-        </>
-      )}
 
-      {/* Selecionar imagem */}
-      <TouchableOpacity style={styles.imageButton} onPress={escolherImagem}>
-        <Text style={styles.imageButtonText}>Selecionar Imagem</Text>
-      </TouchableOpacity>
+          {/* Botão Principal */}
+          {!editandoHorario && (
+            <TouchableOpacity
+              style={[
+                styles.categoryButton,
+                isBloqueado && styles.buttonDisabled,
+              ]}
+              onPress={handleIniciarRegistro}
+            >
+              <Text
+                style={[
+                  styles.categoryText,
+                  isBloqueado && styles.textDisabled,
+                ]}
+              >
+                Registrar Horário
+              </Text>
+            </TouchableOpacity>
+          )}
 
-      {/* Preview da imagem */}
-      {imagem && (
-        <View style={styles.imageWrapper}>
-          <Image source={{ uri: imagem }} style={styles.imagePreview} />
+          {/* Modo Edição Manual */}
+          {editandoHorario && !isBloqueado && (
+            <View style={styles.editContainer}>
+              <Text style={styles.label}>Editar horário (ISO):</Text>
+              <TextInput
+                style={styles.input}
+                value={horarioManual}
+                onChangeText={setHorarioManual}
+              />
+              <TouchableOpacity
+                style={[
+                  styles.categoryButton,
+                  { marginTop: 10, backgroundColor: '#27ae60' },
+                ]}
+                onPress={() => salvarEtapaNoBanco(new Date(horarioManual))}
+                disabled={saving}
+              >
+                {saving ? (
+                  <ActivityIndicator color="#fff" />
+                ) : (
+                  <Text style={styles.categoryText}>Salvar Edição</Text>
+                )}
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                onPress={() => setEditandoHorario(false)}
+                style={{ marginTop: 10 }}
+              >
+                <Text style={{ color: 'red', textAlign: 'center' }}>
+                  Cancelar
+                </Text>
+              </TouchableOpacity>
+            </View>
+          )}
         </View>
+      ) : (
+        <Text style={styles.completedText}>Visita Finalizada!</Text>
       )}
-    </View>
+    </ScrollView>
   );
-}
+};
+
+const enhance = withObservables(['route'], ({ route }: NavProps) => {
+  if (!route?.params?.visitaId) {
+    return {
+      visita: of(null),
+      ordens: of([]),
+    };
+  }
+
+  const visitaObservable = database.collections
+    .get<Visita>('visitas')
+    .findAndObserve(route.params.visitaId);
+
+  return {
+    visita: visitaObservable,
+    ordens: visitaObservable.pipe(
+      switchMap((visita) => {
+        if (!visita) return of([]);
+        return visita.ordens.observe();
+      })
+    ),
+  };
+});
+
+export default enhance(RawRegistroEtapaScreen);
 
 const styles = StyleSheet.create({
   container: {
@@ -166,31 +370,10 @@ const styles = StyleSheet.create({
     color: '#0D47A1',
     fontSize: 18,
   },
-  categoryButton: {
-    padding: 10,
-    backgroundColor: '#E3F2FD',
-    borderColor: '#003351',
-    marginBottom: 8,
-    borderRadius: 6,
-    borderWidth: 1,
-  },
-  categoryButtonSelected: {
-    backgroundColor: '#2196F3',
-    borderColor: '#003351',
-  },
-  categoryText: {
-    textAlign: 'center',
-    color: '#0D47A1',
-    fontWeight: 'bold',
-  },
-  categoryTextSelected: {
-    color: '#fff',
-    fontWeight: 'bold',
-  },
   section: {
-    marginVertical: 16,
+    marginVertical: 10,
     borderTopWidth: 1,
-    borderColor: '#003351',
+    borderColor: '#eee',
     paddingTop: 10,
   },
   sectionTitle: {
@@ -202,45 +385,115 @@ const styles = StyleSheet.create({
   checkboxContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 6,
+    paddingVertical: 8,
   },
   checkboxLabel: {
-    color: '#000',
     fontSize: 15,
+    color: '#000',
   },
-  label: {
-    marginTop: 8,
-    marginBottom: 4,
-    color: '#0D47A1',
+  dataText: {
+    fontSize: 12,
+    color: '#777',
+    marginRight: 5,
   },
-  input: {
-    borderWidth: 1,
-    borderColor: '#000000',
-    borderRadius: 8,
-    padding: 8,
-    backgroundColor: '#FAFAFA',
+  checkIcon: {
+    fontSize: 16,
+    color: '#ccc',
   },
-  imageButton: {
-    backgroundColor: '#2196F3',
-    borderRadius: 8,
-    padding: 10,
-    marginTop: 10,
+  checkActive: {
+    color: 'green',
+    fontWeight: 'bold',
+  },
+  osItem: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    padding: 12,
+    backgroundColor: '#f9f9f9',
+    marginBottom: 5,
+    borderRadius: 5,
     alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#eee',
   },
-  imageButtonText: {
+  emptyText: {
+    fontStyle: 'italic',
+    color: '#aaa',
+    textAlign: 'center',
+    padding: 10,
+  },
+  actionContainer: {
+    marginTop: 20,
+    padding: 15,
+    backgroundColor: '#f0f8ff',
+    borderRadius: 8,
+  },
+  labelProxima: {
+    textAlign: 'center',
+    fontWeight: 'bold',
+    marginBottom: 10,
+    fontSize: 16,
+  },
+  categoryButton: {
+    padding: 15,
+    backgroundColor: '#2196F3',
+    borderRadius: 6,
+    alignItems: 'center',
+    marginTop: 10,
+  },
+  categoryText: {
     color: '#fff',
     fontWeight: 'bold',
   },
-  imageWrapper: {
-    position: 'relative',
-    width: 150,
-    height: 150,
-    marginTop: 16,
+  imageButton: {
+    padding: 10,
+    backgroundColor: '#E3F2FD',
+    borderRadius: 6,
+    alignItems: 'center',
+    marginBottom: 5,
   },
-  imagePreview: {
-    width: '100%',
-    height: '100%',
-    borderRadius: 8,
+  imageButtonText: {
+    color: '#2196F3',
+    fontWeight: 'bold',
+  },
+  editContainer: {
+    marginTop: 10,
+  },
+  label: {
+    marginBottom: 5,
+    color: '#555',
+  },
+  input: {
+    borderWidth: 1,
+    borderColor: '#ccc',
+    borderRadius: 5,
+    padding: 8,
+    backgroundColor: '#fff',
+  },
+  completedText: {
+    color: 'green',
+    fontSize: 18,
+    fontWeight: 'bold',
+  },
+  buttonDisabled: {
+    backgroundColor: '#e0e0e0',
+    borderColor: '#bdbdbd',
+    borderWidth: 1,
+    elevation: 0,
+    opacity: 1,
+  },
+  textDisabled: { color: '#9e9e9e' },
+  warningContainer: {
+    backgroundColor: '#fff3cd',
+    borderWidth: 1,
+    borderColor: '#ffeeba',
+    borderRadius: 6,
+    padding: 10,
+    marginBottom: 15,
+  },
+  warningText: {
+    color: '#856404',
+    textAlign: 'center',
+    fontSize: 13,
+    fontWeight: '600',
   },
 });

@@ -50,6 +50,8 @@ public record OrdemDeServicoSyncDto(
         @JsonProperty("endereco_id")
         UUID endereco_id,
         @JsonProperty("tecnico_responsavel_id")
-        UUID tecnico_responsavel_id
+        UUID tecnico_responsavel_id,
+        @JsonProperty("visita_id")
+        UUID visitaId
 ) {
 }
